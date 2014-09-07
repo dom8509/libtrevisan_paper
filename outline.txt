@@ -1,0 +1,33 @@
+- Kurze Beschreibung RSH Extraktor
+- Was kann parallelisiert werden?
+- Anforderungen an den Algorithmus
+    - Arithmetik über GF2n Feldern
+    - Big Number Support
+    - Evaluierung von Polynomen
+- Getestete Libs und warum diese nicht verwendet wurden
+    - cumodp
+        - kein Big Number Support
+        - keine Arithmetik über GF2n
+    - cump
+        - BN Library für Standartalgorithmen (Add, Mul, Shift, ...)
+        - kein GF2n Support
+        - keine Algorithmen für Polynomevaluierung
+    - garprec
+        - BN Library für Standartalgorithmen (Add, Mul, Shift, ...)
+        - kein BN Support
+        - kein GF2n Support
+        - keine Algorithmen für Polynomevaluierung
+    - grump
+        - BN Library für Standartalgorithmen (Add, Mul, Shift, ...)​
+        - kein GF2n Support
+        - keine Algorithmen für Polynomevaluierung
+        - kein BN Support
+- Implementierung
+    - Polynomevaluierung über abgewandelten Prefix Sum Algorithmus
+    - Umsetzung BN Support
+    - Umsetzung der GF2n Arithmetik
+- Test der Implementierung
+- Entstandene Probleme bei der Umsetzung
+    - Compiler Bugs, etc.
+- Laufzeitanalysen
+- Ausblick
