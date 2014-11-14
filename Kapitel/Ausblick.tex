@@ -1,2 +1,12 @@
-\section{Ausblick}
+\section{Zusammenfassung}
+
+Das eigentliche Ziel des Projektes, zu zeigen, dass der Extraktionsprozess auf die GPU verlagert werden kann, wurde erreicht. Die Frage, ob es praktikabel ist, bleibt offen, da die Leistung im Vergleich zum CPU-Extraktor im Moment noch zu niedrig ist. Sie kann erst beantwortet werden, wenn alle Optimierungsm"oglichkeiten ausgesch"opft wurden.
+
+Die Struktur von libtrevisan m"usste ver"andert werden, bzw. es m"usste neu geschrieben werden mit Fokus sowohl auf CPU als auch auf GPU. Beispielsweise k"onnte der Extraktionsprozess lediglich den schwach zuf"alligen Seed als Input erhalten und die extrahierten Bits zur"uckgeben, sodass die Nutzung von Parallelit"at der Extraktorimplementierung "uberlassen bleibt. Dadurch k"onnte die Art der Parallelit"at, je nach Extraktortyp, der zugrunde liegenden Hardware besser angepasst werden. Des weiteren w"aren eine \emph{prepare} und eine \emph{followUp} Methode sinnvoll, um wiederkehrende Berechnungen bzw. vorbereitende Ma"snahmen, wie das Kopieren von Daten, au"serhalb des eigentlichen Extraktionsvorgangs ausf"uhren zu k"onnen.
+
+Ein weiterer limitierender Faktor ist die Anzahl an Kontextwechseln. Der Wechsel von CPU-Code zu GPU-Code und v.v. kostet relativ viel Zeit und sollte deshalb auf ein absolutes Minimum reduziert werden. Idealerweise finden h"ochstens zwei Wechsel statt: Einmal von CPU auf GPU und einmal von GPU auf CPU.
+
+Die Berechnungen selbst bieten ebenfalls Potential zur Optimierung. In der aktuellen Implementierung liegen alle Variablen bzw. Arrays im globalen Speicher. Das macht die Implementierung vergleichsweise einfach, jedoch "uberwiegt der Nachteil gewaltig. Globaler Speicher ist langsam und Zugriffe darauf sollten daher vermieden werden. Allerdings k"onnte es sein, dass der lokale Speicher zu klein ist um mit gr"o"sen Polynomen zu rechnen. In diesem Fall m"usste eine M"oglichkeit gefunden werden die Berechnungen aufzuteilen.
+
+Die genaue Ursache der \emph{Segmentation Faults} bei $M > 18$ m"usste untersucht werden. Eine Ursache k"onnte die gr"o"se der vorkommenden Polynome sein.
 

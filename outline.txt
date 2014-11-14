@@ -14,14 +14,13 @@
         - keine Algorithmen für Polynomevaluierung
     - garprec
         - BN Library für Standartalgorithmen (Add, Mul, Shift, ...)
-        - kein BN Support
         - kein GF2n Support
         - keine Algorithmen für Polynomevaluierung
     - grump
         - BN Library für Standartalgorithmen (Add, Mul, Shift, ...)​
         - kein GF2n Support
         - keine Algorithmen für Polynomevaluierung
-        - kein BN Support
+	- keine Lizenz
 - Implementierung
     - Polynomevaluierung über abgewandelten Prefix Sum Algorithmus
     - Umsetzung BN Support

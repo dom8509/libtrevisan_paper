@@ -62,6 +62,8 @@
 %
 \usepackage{amsmath}
 \usepackage{amssymb}
+\usepackage{nicefrac}
+
 
 %
 % zum Zeinen von Bäumen
@@ -107,7 +109,6 @@
 % Paket um LIstings sauber zu formatieren.
 %
 \usepackage{listings}
-
 %
 % Listing Definationen für PHP Code
 %
@@ -133,6 +134,7 @@
 %
 \graphicspath{{Bilder/}}
 
+\usepackage[onehalfspacing]{setspace}
 
 %
 % Strukturiertiefe bis subsubsection{} möglich
@@ -152,15 +154,20 @@
 \usepackage{anysize}
 \begin{document}
 
-\title{Titel noch offen}
+\def\nicefrac#1#2{ \raise.5ex\hbox{$#1$}%
+ \kern-.1em/\kern-.15em%
+  \lower.25ex\hbox{$#2$}}
+
+\title{GPU-Implementierung des RSH-Extraktors}
+\author{Dominik Stamm, Markus Dollinger}
 \maketitle
 
 \input{Kapitel/RSH-Extraktor}
 \input{Kapitel/Anforderungen}
 \input{Kapitel/Bibliotheken}
 \input{Kapitel/Implementierung}
+\input{Kapitel/Integration}
 \input{Kapitel/Laufzeitanalysen}
-\input{Kapitel/Probleme}
 \input{Kapitel/Ausblick}
 
 \newpage

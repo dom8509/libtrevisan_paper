@@ -1,18 +1,11 @@
 \section{Implementierung}
 
-Das primäre Ziel einer Implementierung war es, eine Möglichkeit zu finden, den vorhandenen Algorithmus des Trevisan Extraktors so auf die GPU einer Grafikkarte zu portieren, dass die zeitaufwändigen Berechnungsschritte so gut wie möglich parallelisiert werden und somit eine reduzierte Gesamtlaufzeit des Extraktionsprozesses zu erreichen.\newline
-Um den Trevisan Extraktor auf einem Grafikprozessor portieren zu können, muss der Algorithmus folgende Punkte erfüllen:
-\begin{itemize}
-	\item Es können sehr große Koeffizienten jenseits der 1000 Bit entstehen, wodurch Support für große Zahlen benötigt wird
-	\item Die im CPU Algorithmus verwendeten Erweiterungsfelder über $GF(2n)$ müssen auch im GPU Code unterstützt werden
-	\item Es muss ein Algorithmus zur Polynomevaluierung implementiert werden 
-	\item Der Algorithmus sollte parallelisiert eine geringere Laufzeitkomplexität besitzen als der CPU Algorithmus um eine Beschleunigung des Extraktionsprozesses zu erreichen
-\end{itemize}
+Da keine der gefundenen Bibliotheken alle Anforderungen erf"ullt, musste eine eigene Implementierung entwickelt werden, die alle ben"otigten mathematischen Berechnungen durchf"uhren kann.
 
 \subsection{Parallele Polynevaluierung}
 Der Standartalgorithmus für die Polynomevaluierung auf CPUs ist das \textbf{Horner Schema}, da dies die minimale Anzahl an Berechnungsschritten benötigt und somit eine optimale Laufzeitkomplexität auf sequenziellen Architekturen aufweist. Leider ist beim \textbf{Hormer Schema} jeder Berechnungsschritt abhängig vom Zwischenergebnis des letztes Schrittes, was eine Parallelisierung des Algorithmus im Wege steht.\newline
 Ein weiteres Verwahren zur Polynomevaluierung ist das \textbf{Estrin Schema}. Das \textbf{Estrin Schema} versucht die schlechte Parallelisierbarkeit des \textbf{Horner Schemas} dadurch zu eliminieren, indem das zu evaluierende Polynom so in Teilausdrücke aufgeteilt wird, dass einzelne Teile der Formel parallel abgearbeitet werden. Dieses Verfahren kommt zwar nicht mehr mit einer minimalen Anzahl von Additionen und Multiplikationen aus, dies wird zu Gunsten der besseren Parallelisierbarkeit allerdings in kauf genommen.\newline
-Formel \eqref{estrin} zweigt, wie beispielsweise ein Polynom vom Grad 4 mit Hilfe des \textbf{Estrin Schemas} aufgelöst werden kann.
+Formel \eqref{estrin} zeigt, wie beispielsweise ein Polynom vom Grad 4 mit Hilfe des \textbf{Estrin Schemas} aufgelöst werden kann.
 \begin{equation}\label{estrin}
 P(x) = a_4x^4 + a_3x^3 + a_2x^2 + a_1x + a_0 = a_4x^4 + (a_2+a_3x)x^2 + (a_0+a_1x)
 \end{equation}
@@ -197,7 +190,7 @@ Ein weiteres Problem dass sich aufgestellt hat ist die Speicherverwaltung im Cud
 	\end{enumerate}
 \end{enumerate}
 
- Aktuell werden alle verwendeten Variablen noch im globalen Speicher der GPU gehalten, was jedoch zu langsamen Zugriffszeiten führt. Ein weiterer Schritt wäre zu prüfen, in wie weit der verwendetet Speicher über Shared Memory gepuffert und somit die Zugriffszeiten beschleunigt werden können. Hierbei müssen jedoch noch mehrere Dinge bedacht werden. Angenommen es wird eine Feldgröße von $1000$ Bit verwendet und jeder Threads möchte lediglich sein Ergebnis puffern, so werden bei einer Maximalen Anzahl von 1024 Threads pro Block insgesamt $10240000\ Bits = 1280000\ Bytes$ benötigt, was die Größe von 49152 Bytes pro Block bei weiten übersteigt. Passt man die Anzahl der Threads pro Block an die Größe der benötigten Shared Memory pro Thread an, reduziert sich die Anzahl der Threads pro Block auf 49. Dadurch erhöht sich wiederum die Anzahl der benötigten Blöcke, was eine globale Synchronisierung der Blöcke unvermeidlich macht. Es muss sich aus diesem Grund genau überlegt werden, welche Daten gepuffert werden sollen und wie sich die entstehende Anzahl der Threads pro Block auf die globale Performance auswirkt.
+ Aktuell werden alle verwendeten Variablen noch im globalen Speicher der GPU gehalten, was jedoch zu langsamen Zugriffszeiten führt. Ein weiterer Schritt wäre zu prüfen, in wie weit der verwendetet Speicher über Shared Memory gepuffert und somit die Zugriffszeiten beschleunigt werden können. Hierbei müssen jedoch noch mehrere Dinge bedacht werden. Angenommen es wird eine Feldgröße von $1000$ Bit verwendet und jeder Threads möchte lediglich sein Ergebnis puffern, so werden bei einer Maximalen Anzahl von 1024 Threads pro Block insgesamt $10240000\ Bits = 1280000\ Bytes$ benötigt, was die Größe von 49152 Bytes pro Block bei weitem übersteigt. Passt man die Anzahl der Threads pro Block an die Größe der benötigten Shared Memory pro Thread an, reduziert sich die Anzahl der Threads pro Block auf 49. Dadurch erhöht sich wiederum die Anzahl der benötigten Blöcke, was eine globale Synchronisierung der Blöcke unvermeidlich macht. Es muss sich aus diesem Grund genau überlegt werden, welche Daten gepuffert werden sollen und wie sich die entstehende Anzahl der Threads pro Block auf die globale Performance auswirkt.
 
 \begin{table}
 \centering

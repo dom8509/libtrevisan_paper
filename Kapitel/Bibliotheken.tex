@@ -1,6 +1,25 @@
-\section{Getestete Bibliotheken und Stand der Technik}
+\section{Getestete Bibliotheken}
+\label{Bibliotheken}
 
-\subsection{cumodp}
-\subsection{cump}
-\subsection{garprec}
-\subsection{grump}
+Der RSH-Extraktor hat mathematische Anforderungen, die "uber die F"ahigkeiten der in Hardware verf"ugbaren Arithmetik hinausgehen und um den Extraktor auf einen Grafikprozessor portieren zu können, m"ussen folgende Operationen unterst"utzt werden:
+\begin{itemize}
+	\item multiplizieren und evaluieren von Polynomen "uber $GF(2n)$
+	\item rechnen mit sehr gro"sen Zahlen, da Koeffizienten jenseits der 1000 Bit entstehen k"onnen
+\end{itemize}
+
+Bei der Recherche nach einer geeigneten Basis wurden ausschlie"slich CUDA-Bibliotheken gefunden. Eine OpenCL-Bibliothek wurde zum Zeitpunkt der Recherche nicht gefunden, sodass die Entscheidung, in welcher Sprache der Algorithmus implementiert wird, auf CUDA fiel.
+
+\subsection{CUMODP}
+Die Cuda Modular Polyomial (CUMODP) Bibliothek implementiert arithmetische Operationen f"ur dichte Matrizen und dichte Polynome, vor allem mit modularen Integer Koeffizienten. Die Bibliothek steht unter der GPL.
+Allerdings existiert kein Big Number Support und keine Arithmetik "uber $GF(2^n)$, sodass CUMODP den Anforderungen nicht gen"ugt.
+
+\subsection{CUMP}
+Die CUDA Multiple Precision Arithmetic (CUMP) Bibliothek basiert auf der GNU MP (GMP) Bibliothek und implementiert Gleitkommaarithmetik mit beliebiger Genauigkeit. Die Bibliothek kann als Ersatz f"ur GMP verwendet werden um die Arithmetik von der CPU auf die GPU zu verlagern. Die Bibliothek steht ebenfalls unter der GPL.
+CUMP bietet zwar Big Number Support, jedoch keine M"oglichkeit zur Evaluierung von Polynomen und auch keine Arithmetik "uber $GF(2^n)$. Dadurch gen"ugt auch CUMP nicht den Anforderungen.
+
+\subsection{GARPREC}
+Die GARPREC Bibliothek unterst"utzt ebenfalls Gleitkommaarithmetik mit beliebiger Genauigkeit, jedoch ebenfalls keine M"oglichkeit zur Evaluierung von Polynomen und auch keine Arithmetik "uber $GF(2^n)$.
+GARPEC steht ebenfalls unter der GPL.
+
+\subsection{GPUMP}
+Die GPUMP Bibliothek implementiert Ganzzahlarithmetik mit beliebiger Genauigkeit. Der Fokus liegt bei der Verwendung in Public Key Kryptographie (PKK) Verfahren. Durch das Fehlen der Arithmetik "uber die ben"otigten Erweiterungsfelder sowie die M"oglichkeit zur Polynomevaluierung ist auch diese Bibliothek nicht geeignet. Dar"uber hinaus fehlt eine Lizenz.

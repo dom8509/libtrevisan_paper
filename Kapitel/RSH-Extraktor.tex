@@ -1,1 +1,16 @@
 \section{Der RSH-Extraktor}
+
+%Der \emph{RSH-Extraktor} besteht aus einer Konkatenation von zwei verschiedenen Hash-Funktionen. Die erste ist bekannt als \emph{polynomielles Hashing}, bzw. als \emph{Reed-Solomon Code}, da die Konkatenation der Hashes der Seeds sich mit der Kodierung durch einen \emph{Reed-Solomon Code} deckt. Die zweite Hash-Funktion wird auch als \emph{Hadamard Code} bezeichnet, da sich die Konkatenation der Ausgabe "uber alle Seeds sich mit einer \emph{Hadamard} Kodierung deckt. 
+%Renner \cite{renner2008security} hat gezeigt, dass sich $universal_2$ Hash-Funktionen als Extraktoren eignen.
+
+Der \emph{RSH-Extraktor} wurde von Mauerer \emph{et al.} \cite{mauerer2012modular}, basierend auf Beweisen von Renner \cite{renner2008security} und Tomamichel \emph{et al.} \cite{tomamichel2011leftover}, entwickelt. Renner hat bewiesen, dass $universal_2$ Hash Funktionen gute Extraktoren sind. Tomamichel \emph{et al.} haben gezeigt, dass das gleiche auch f"ur $\delta$-$almost\ universal_2$ Hash Funktionen gilt, wenn das $\delta$ klein genug ist.
+
+Die Konstruktion des Extraktors besteht aus der Konkatenation von zwei Hash Funktionen und erh"alt als Eingabe einen Seed der L"ange $2l$ (Die genaue Definition von $l$ ist in \cite{mauerer2012modular} Kapitel III.C.3 gegeben). Die erste Hash Funktion ist auch bekannt als \emph{polynomielles Hashing}, bzw. als \emph{Reed-Solomon Code}, da die Konkatenation der Hashes aller Seeds mit der Kodierung durch einen \emph{Reed-Solomon Code} korreliert. Der Eingabestring wird in Bl"ocke der L"ange $l$ zerlegt und jeder Block wird als Element eines Feldes $x_i \in\ $GF$(2^l)$ betrachtet und das Polynom
+\begin{equation}
+	p_\alpha(x) = \sum_{i=1}^{s} x_i \alpha ^{s-i}
+\end{equation}
+wird ausgewertet, wobei $\alpha \in\ $GF$(2^l)$ die erste H"alfte des Seeds ist.
+
+Da das $\delta$ des \emph{polynomiellen Hashings} zu gro"s w"aere um einen Extraktor zu konstruieren, wurde es mit einer zweiten Hash Funktion kombiniert. Diese wird auch als \emph{Hadamard Code} bezeichnet, da die Verkettung der Ausgabe "uber alle Seeds einer Hadamard Kodierung entspricht. Die Funktion berechnet die Parit"at des bitweisen Produkts von $p_\alpha(x)$ und der zweiten H"alfte des Seeds. Die Parit"at ist das extrahierte Zufallsbit.
+
+Mauerer \emph{et al.} haben gezeigt, dass diese Konstruktion ein \emph{quantum-proof $(4 \log \frac{1}{\varepsilon} + 2$, $2\varepsilon)$-strong extractor} ist.
