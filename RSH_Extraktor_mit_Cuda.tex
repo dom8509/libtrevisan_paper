@@ -32,6 +32,34 @@
 \usepackage{prettyref}
 \usepackage{titleref}
 
+\usepackage{xcolor}
+
+\usepackage{listings}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.22}
+\definecolor{backcolour}{rgb}{0.15,0.15,0.12}
+ 
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{white},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{codepurple},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+ 
+\lstset{style=mystyle}
 %
 % Paket um Grafiken einbetten zu können
 %
@@ -57,6 +85,11 @@
 % Mitte: leer
 \chead{}
 
+\usepackage[textfont=bf,singlelinecheck=true,justification=centering]{caption}
+\DeclareCaptionLabelSeparator{linebreak}{\\}
+\captionsetup{labelsep=linebreak}
+
+
 %
 % mathematische symbole aus dem AMS Paket.
 %
@@ -64,6 +97,72 @@
 \usepackage{amssymb}
 \usepackage{nicefrac}
 
+\usepackage{verbatim}
+
+\usepackage{pifont}% http://ctan.org/pkg/pifont
+\newcommand{\cmark}{\color{green}\ding{51}}%
+\newcommand{\xmark}{\color{red}\ding{55}}%
+
+\usepackage{pgfplots}
+\pgfplotsset{
+	major grid style={densely dotted,black!30},
+	minor grid style={densely dotted,black!30},
+    box plot/.style={
+        /pgfplots/.cd,
+        blue,
+        only marks,
+        mark=-,
+        mark size=0em,
+        /pgfplots/error bars/.cd,
+        y dir=plus,
+        y explicit,
+    },
+    other color/.style={
+	    /pgfplots/.cd,
+    	red
+    },
+    box plot box/.style={
+        /pgfplots/error bars/draw error bar/.code 2 args={%
+            \draw[gray,thick] ##1 |- ##2;
+        },
+        /pgfplots/table/.cd,
+        y index=2,
+        y error expr={\thisrowno{3}-\thisrowno{2}},
+        /pgfplots/box plot
+    },
+    box plot top whisker/.style={
+        /pgfplots/error bars/draw error bar/.code 2 args={%
+            \pgfkeysgetvalue{/pgfplots/error bars/error mark}%
+            {\pgfplotserrorbarsmark}%
+            \pgfkeysgetvalue{/pgfplots/error bars/error mark options}%
+            {\pgfplotserrorbarsmarkopts}%
+            \path[gray,thick] ##1 |- ##2;
+        },
+        /pgfplots/table/.cd,
+        y index=4,
+        y error expr={\thisrowno{2}-\thisrowno{4}},
+        /pgfplots/box plot
+    },
+    box plot bottom whisker/.style={
+        /pgfplots/error bars/draw error bar/.code 2 args={%
+            \pgfkeysgetvalue{/pgfplots/error bars/error mark}%
+            {\pgfplotserrorbarsmark}%
+            \pgfkeysgetvalue{/pgfplots/error bars/error mark options}%
+            {\pgfplotserrorbarsmarkopts}%
+            \path[gray,thick] ##1 |- ##2;
+        },
+        /pgfplots/table/.cd,
+        y index=5,
+        y error expr={\thisrowno{3}-\thisrowno{5}},
+        /pgfplots/box plot
+    },
+    box plot median/.style={
+        /pgfplots/box plot,
+        /pgfplots/.cd,
+        mark size=.4em,
+        thick
+    }
+}
 
 %
 % zum Zeinen von Bäumen
@@ -172,6 +271,8 @@
 
 \newpage
 % Verzeichnisse einbinden
+
+
 
 %
 % Literaturverzeichnis
