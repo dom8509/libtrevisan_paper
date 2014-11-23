@@ -1,25 +1,45 @@
 \section{Getestete Bibliotheken}
 \label{Bibliotheken}
 
-Der RSH-Extraktor hat mathematische Anforderungen, die "uber die F"ahigkeiten der in Hardware verf"ugbaren Arithmetik hinausgehen und um den Extraktor auf einen Grafikprozessor portieren zu können, m"ussen folgende Operationen unterst"utzt werden:
+Der RSH-Extraktor hat mathematische Anforderungen, die "uber die F"ahigkeiten der in Hardware verf"ugbaren Arithmetik hinausgehen. Um den Extraktor auf einen Grafikprozessor portieren zu können, m"ussen folgende Operationen unterst"utzt werden:
 \begin{itemize}
-	\item multiplizieren und evaluieren von Polynomen "uber $GF(2n)$
-	\item rechnen mit sehr gro"sen Zahlen, da Koeffizienten jenseits der 1000 Bit entstehen k"onnen
+	\item Multiplizieren und Evaluieren von Polynomen "uber $GF(2^n)$
+	\item Rechnen mit sehr gro"sen Zahlen, da Koeffizienten mit mehr als 1000 Bit entstehen k"onnen
 \end{itemize}
 
-Bei der Recherche nach einer geeigneten Basis wurden ausschlie"slich CUDA-Bibliotheken gefunden. Eine OpenCL-Bibliothek wurde zum Zeitpunkt der Recherche nicht gefunden, sodass die Entscheidung, in welcher Sprache der Algorithmus implementiert wird, auf CUDA fiel.
+Um GPUs f"ur Berechnungen zu nutzen gibt es verschiedene APIs. Die CUDA-API ist eine von Nvidia entwickelte Programmier-Technik die es erm"oglicht Berechnungen auf die Hauseigenen GPUs auszulagern. OpenCL ist ein von der Khronos Group initiierter offener Standard um Berechnungen auf GPUs durchzuf"uhren. Dabei gibt es keine Beschr"ankung auf einen spezifischen GPU-Hersteller und w"are deshalb CUDA vorzuziehen. Eine dritte M"oglichkeit ist DirectCompute, eine in die DirectX-API integrierte Schnittstelle und damit auf Windows-Plattformen beschr"ankt.
+
+Eine Recherche nach einer geeigneten Basis f"uhrte zu CUDA-Bibliotheken. Eine OpenCL-Bibliothek war zum Zeitpunkt der Recherche nicht verf"ugbar.
 
 \subsection{CUMODP}
-Die Cuda Modular Polyomial (CUMODP) Bibliothek implementiert arithmetische Operationen f"ur dichte Matrizen und dichte Polynome, vor allem mit modularen Integer Koeffizienten. Die Bibliothek steht unter der GPL.
-Allerdings existiert kein Big Number Support und keine Arithmetik "uber $GF(2^n)$, sodass CUMODP den Anforderungen nicht gen"ugt.
+Die Cuda Modular Polyomial (CUMODP) Bibliothek implementiert arithmetische Operationen f"ur dicht besetzte Matrizen und dicht besetzte Koeffizientenvektoren von Polynomen. Der Fokus liegt bei ganzzahligen Koeffizienten und die Bibliothek steht unter der GPL.
+Allerdings existiert keine Unterst"utzung f"ur Zahlen beliebiger L"ange und keine Arithmetik "uber $GF(2^n)$, sodass CUMODP den Anforderungen nicht gen"ugt.
 
 \subsection{CUMP}
-Die CUDA Multiple Precision Arithmetic (CUMP) Bibliothek basiert auf der GNU MP (GMP) Bibliothek und implementiert Gleitkommaarithmetik mit beliebiger Genauigkeit. Die Bibliothek kann als Ersatz f"ur GMP verwendet werden um die Arithmetik von der CPU auf die GPU zu verlagern. Die Bibliothek steht ebenfalls unter der GPL.
-CUMP bietet zwar Big Number Support, jedoch keine M"oglichkeit zur Evaluierung von Polynomen und auch keine Arithmetik "uber $GF(2^n)$. Dadurch gen"ugt auch CUMP nicht den Anforderungen.
+Die CUDA Multiple Precision Arithmetic (CUMP) Bibliothek basiert auf der GNU MP (GMP) Bibliothek und implementiert Gleitkommaarithmetik mit beliebiger Genauigkeit. Die Bibliothek kann als Ersatz f"ur GMP verwendet werden, um die Arithmetik von der CPU auf die GPU zu verlagern. Die Bibliothek steht ebenfalls unter der GPL.
+CUMP bietet zwar Unterst"utzung f"ur Zahlen beliebiger L"ange, jedoch keine M"oglichkeit zur Evaluierung von Polynomen und auch keine Arithmetik "uber $GF(2^n)$. Dadurch gen"ugt auch CUMP nicht den Anforderungen.
 
 \subsection{GARPREC}
 Die GARPREC Bibliothek unterst"utzt ebenfalls Gleitkommaarithmetik mit beliebiger Genauigkeit, jedoch ebenfalls keine M"oglichkeit zur Evaluierung von Polynomen und auch keine Arithmetik "uber $GF(2^n)$.
 GARPEC steht ebenfalls unter der GPL.
 
 \subsection{GPUMP}
-Die GPUMP Bibliothek implementiert Ganzzahlarithmetik mit beliebiger Genauigkeit. Der Fokus liegt bei der Verwendung in Public Key Kryptographie (PKK) Verfahren. Durch das Fehlen der Arithmetik "uber die ben"otigten Erweiterungsfelder sowie die M"oglichkeit zur Polynomevaluierung ist auch diese Bibliothek nicht geeignet. Dar"uber hinaus fehlt eine Lizenz.
+Die GPUMP Bibliothek implementiert Ganzzahlarithmetik mit beliebiger Genauigkeit. Der Fokus liegt bei der Verwendung in Public Key Kryptographie (PKK) Verfahren. Durch das Fehlen der Arithmetik "uber die ben"otigten Erweiterungsfelder sowie die M"oglichkeit zur Polynomevaluierung ist auch diese Bibliothek nicht geeignet. Der Quellcode der Bibliothek wird nicht als Download angeboten, sondern war nur auf Anfrage zu erhalten. Dar"uber hinaus f"uhrt die Absenz einer Lizenz zu einer rechtlich unklaren Situation.
+
+
+\begin{table}
+	\centering
+	\begin{tabular}{lccc}
+		\hline \hline
+		Bibliothek & gro"se Zahlen & $GF(2^n)$-Arithmetik & Polynomevaluierung \\
+		\hline
+		\vspace{-3mm}\\
+		CUMODP	& \xmark & \xmark & \cmark \\
+		CUMP	& \cmark & \xmark & \xmark \\
+		GARPREC	& \cmark & \xmark & \xmark \\
+		GPUMP	& \cmark & \xmark & \xmark \\
+		\hline
+	\end{tabular}
+	\caption{Gegen"uberstellung der Bibliotheken}
+	\label{table:vergleichBibliotheken}
+\end{table}
