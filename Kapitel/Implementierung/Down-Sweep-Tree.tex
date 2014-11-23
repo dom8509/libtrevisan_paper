@@ -49,35 +49,36 @@
 \node (rect) at (6*\WIDTH,2) [draw,minimum width=\WIDTH cm,minimum height=\HEIGHT cm, fill=yellow!40, align=center] (e6) {$x$\\\scriptsize{(Thread 3)}};
 \node (rect) at (7*\WIDTH,2) [draw,minimum width=\WIDTH cm,minimum height=\HEIGHT cm, fill=yellow!40, align=center] (e7) {$1$\\\scriptsize{(Thread 3)}};
 
-\node[draw] at (-2,8) {$i=0$};
-\node[draw] at (-2,6) {$i=1$};
-\node[draw] at (-2,4) {$i=2$};
-\node[draw] at (-2,2) {$i=3$};
+\node at (-2.5,10) {Erg. Reduce-Step:};
+\node at (-2.5,8) {Initiale Zuseisung:};
+\node at (-1.5,6) {$i=0$};
+\node at (-1.5,4) {$i=1$};
+\node at (-1.5,2) {$i=2$};
 
 \draw[thick, ->] (a0.south) -- (b0.north);
 
 \draw[thick, ->] (b0.south) -- (c0.north);
-\draw[thick, ->] (b4.south) -- (c0.north);
-\draw[dashed, ->, red] (b0.south) .. controls (0,7) and (6,7) .. (c4.north);
+\draw[thick, ->] (b4.south) .. controls (4*\WIDTH,7) and (0*\WIDTH,7.5) .. (c0.north);
+\draw[dashed, ->, red] (b0.south) .. controls (0*\WIDTH,7) and (4*\WIDTH,7.5) .. (c4.north);
 
 \draw[thick, ->] (c0.south) -- (d0.north);
-\draw[thick, ->] (c2.south) -- (d0.north);
+\draw[thick, ->] (c2.south) .. controls (2*\WIDTH,5) and (0*\WIDTH,5.5) .. (d0.north);
 \draw[thick, ->] (c4.south) -- (d4.north);
-\draw[thick, ->] (c6.south) -- (d4.north);
-\draw[dashed, ->, red] (c0.south) .. controls (0,5) and (3,5) .. (d2.north);
-\draw[dashed, ->, red] (c4.south) .. controls (6,5) and (9,5) .. (d6.north);
+\draw[thick, ->] (c6.south) .. controls (6*\WIDTH,5) and (4*\WIDTH,5.5) .. (d4.north);
+\draw[dashed, ->, red] (c0.south) .. controls (0*\WIDTH,5) and (2*\WIDTH,5.5) .. (d2.north);
+\draw[dashed, ->, red] (c4.south) .. controls (4*\WIDTH,5) and (6*\WIDTH,5.5) .. (d6.north);
 
 \draw[thick, ->] (d0.south) -- (e0.north);
-\draw[thick, ->] (d1.south) -- (e0.north);
+\draw[thick, ->] (d1.south) .. controls (1*\WIDTH,3) and (0*\WIDTH,3.5) .. (e0.north);
 \draw[thick, ->] (d2.south) -- (e2.north);
-\draw[thick, ->] (d3.south) -- (e2.north);
+\draw[thick, ->] (d3.south) .. controls (3*\WIDTH,3) and (2*\WIDTH,3.5) .. (e2.north);
 \draw[thick, ->] (d4.south) -- (e4.north);
-\draw[thick, ->] (d5.south) -- (e4.north);
+\draw[thick, ->] (d5.south) .. controls (5*\WIDTH,3) and (4*\WIDTH,3.5) .. (e4.north);
 \draw[thick, ->] (d6.south) -- (e6.north);
-\draw[thick, ->] (d7.south) -- (e6.north);
-\draw[dashed, ->, red] (d0.south) .. controls (0,3) and (1.5,3) .. (e1.north);
-\draw[dashed, ->, red] (d2.south) .. controls (3,3) and (4.5,3) .. (e3.north);
-\draw[dashed, ->, red] (d4.south) .. controls (6,3) and (7.5,3) .. (e5.north);
-\draw[dashed, ->, red] (d6.south) .. controls (9,3) and (10.5,3) .. (e7.north);
+\draw[thick, ->] (d7.south) .. controls (7*\WIDTH,3) and (6*\WIDTH,3.5) .. (e6.north);
+\draw[dashed, ->, red] (d0.south) .. controls (0*\WIDTH,3) and (1*\WIDTH,3.5) .. (e1.north);
+\draw[dashed, ->, red] (d2.south) .. controls (2*\WIDTH,3) and (3*\WIDTH,3.5) .. (e3.north);
+\draw[dashed, ->, red] (d4.south) .. controls (4*\WIDTH,3) and (5*\WIDTH,3.5) .. (e5.north);
+\draw[dashed, ->, red] (d6.south) .. controls (6*\WIDTH,3) and (7*\WIDTH,3.5) .. (e7.north);
 
 \end{tikzpicture}

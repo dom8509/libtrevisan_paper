@@ -40,26 +40,27 @@
 \node (rect) at (6*\WIDTH,6) [draw,minimum width=\WIDTH cm,minimum height=\HEIGHT cm, fill=blue!30] (d6) {$x^2$};
 \node (rect) at (7*\WIDTH,6) [draw,minimum width=\WIDTH cm,minimum height=\HEIGHT cm, fill=blue!30] (d7) {$x$};
 
-\node[draw] at (-2,2) {$i=0$};
-\node[draw] at (-2,4) {$i=1$};
-\node[draw] at (-2,6) {$i=2$};
+\node at (-1.5,0) {Blätter:};
+\node at (-1.5,2) {$i=0$};
+\node at (-1.5,4) {$i=1$};
+\node at (-1.5,6) {$i=2$};
 
 % print paths
 \draw[thick, ->] (a0.north) -- (b0.south);
-\draw[thick, ->] (a1.north) -- (b0.south);
+\draw[thick, ->] (a1.north) .. controls (1*\WIDTH,1) and (0*\WIDTH,0.5) .. (b0.south);
 \draw[thick, ->] (a2.north) -- (b2.south);
-\draw[thick, ->] (a3.north) -- (b2.south);
+\draw[thick, ->] (a3.north) .. controls (3*\WIDTH,1) and (2*\WIDTH,0.5) .. (b2.south);
 \draw[thick, ->] (a4.north) -- (b4.south);
-\draw[thick, ->] (a5.north) -- (b4.south);
+\draw[thick, ->] (a5.north) .. controls (5*\WIDTH,1) and (4*\WIDTH,0.5) .. (b4.south);
 \draw[thick, ->] (a6.north) -- (b6.south);
-\draw[thick, ->] (a7.north) -- (b6.south);
+\draw[thick, ->] (a7.north) .. controls (7*\WIDTH,1) and (6*\WIDTH,0.5) .. (b6.south);
 
 \draw[thick, ->] (b0.north) -- (c0.south);
-\draw[thick, ->] (b2.north) -- (c0.south);
+\draw[thick, ->] (b2.north) .. controls (2*\WIDTH,3) and (0*\WIDTH,2.5) .. (c0.south);
 \draw[thick, ->] (b4.north) -- (c4.south);
-\draw[thick, ->] (b6.north) -- (c4.south);
+\draw[thick, ->] (b6.north) .. controls (6*\WIDTH,3) and (4*\WIDTH,2.5) .. (c4.south);
 
 \draw[thick, ->] (c0.north) -- (d0.south);
-\draw[thick, ->] (c4.north) -- (d0.south);
+\draw[thick, ->] (c4.north) .. controls (4*\WIDTH,5) and (0*\WIDTH,4.5) .. (d0.south);
 
 \end{tikzpicture}

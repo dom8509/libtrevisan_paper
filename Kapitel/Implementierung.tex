@@ -1,20 +1,20 @@
 \section{Implementierung}
 
-Da keine der gefundenen Bibliotheken alle Anforderungen erf"ullt, musste eine eigene Implementierung entwickelt werden, die alle ben"otigten mathematischen Berechnungen durchf"uhren kann.
+Da keine der gefundenen Bibliotheken alle Anforderungen erfüllt, musste eine eigene Implementierung entwickelt werden, die alle ben"otigten mathematischen Berechnungen durchführen kann.
 
 \subsection{Parallele Polynevaluierung}
-Der Standartalgorithmus für die Polynomevaluierung auf CPUs ist das \textbf{Horner Schema}, da dies die minimale Anzahl an Berechnungsschritten benötigt und somit eine optimale Laufzeitkomplexität auf sequenziellen Architekturen aufweist. Leider ist beim \textbf{Hormer Schema} jeder Berechnungsschritt abhängig vom Zwischenergebnis des letztes Schrittes, was eine Parallelisierung des Algorithmus im Wege steht.\newline
-Ein weiteres Verwahren zur Polynomevaluierung ist das \textbf{Estrin Schema}. Das \textbf{Estrin Schema} versucht die schlechte Parallelisierbarkeit des \textbf{Horner Schemas} dadurch zu eliminieren, indem das zu evaluierende Polynom so in Teilausdrücke aufgeteilt wird, dass einzelne Teile der Formel parallel abgearbeitet werden. Dieses Verfahren kommt zwar nicht mehr mit einer minimalen Anzahl von Additionen und Multiplikationen aus, dies wird zu Gunsten der besseren Parallelisierbarkeit allerdings in kauf genommen.\newline
-Formel \eqref{estrin} zeigt, wie beispielsweise ein Polynom vom Grad 4 mit Hilfe des \textbf{Estrin Schemas} aufgelöst werden kann.
+Der Standardalgorithmus für die Polynomevaluierung auf CPUs ist das \textit{Horner-Schema}, da dies die minimale Anzahl an Additionen und Multiplikationen benötigt\cite{Ostrowski:1954}\cite{Pan:1966}. Leider ist beim Horner-Schema jeder Berechnungsschritt abhängig vom Zwischenergebnis des letztes Schrittes, was einer Parallelisierung des Algorithmus im Wege steht.\newline
+Ein weiteres Verwahren zur Polynomevaluierung ist das \textit{Estrin-Schema}\cite{EstrinsScheme}. Das Estrin-Schema versucht die schlechte Parallelisierbarkeit des Horner-Schemas zu eliminieren, indem das zu evaluierende Polynom so in Teilausdrücke aufgeteilt wird, dass einzelne Teile der Formel parallel abgearbeitet werden. Dieses Verfahren kommt zwar im Gegensatz zum Horner-Schema mehr mit der minimalen Anzahl von Additionen und Multiplikationen aus, dies wird zu Gunsten der besseren Parallelisierbarkeit allerdings akzeptiert.\newline
+Formel \eqref{estrin} zeigt, wie beispielsweise ein Polynom vom Grad 4 mit Hilfe des Estrin-Schemas aufgelöst werden kann.
 \begin{equation}\label{estrin}
 P(x) = a_4x^4 + a_3x^3 + a_2x^2 + a_1x + a_0 = a_4x^4 + (a_2+a_3x)x^2 + (a_0+a_1x)
 \end{equation}
 
-Leider ist auch das \textbf{Estrin Schema} nicht optimal auf einer GPU parallelisierbar, da zum einen initial jedes Polynom in Abhängigkeit seines Grades in Gruppen zerlegt werden muss und zum anderen die notwendigen Potenzen von $x$ berechnet werden müssen bevor der Algorithmus angewandt werden kann. Wenn man allerdings alle Potenzen von x initial berechnen muss und diese einem im weiteren Verlauf zur Verfügung stehen, ist im Kontext der GPU Programmierung der effektivste Weg das Polynom auszuwerten, indem alle Koeffizienten mit den nötigen Potenzen von $x$ multipliziert werden. Für diesen Schritt kann je Multiplikation ein Kernelthread verwendet werden, der lediglich eine Multiplikation durchführen muss und so bei genügender Anzahl an Threads in einem Zyklus abgearbeitet werden kann. 
-Der verbleibende Schritt, in dem die Teilergebnisse zu einem Gesamtergebnis aufsummiert werden, kann zudem mit einer Laufzeit von $O(log\ n)$ abgearbeitet werden, was später noch gezeigt wird.
-Dadurch ergibt sich bei vorhandenen Potenzen von $x$ und einer guten Parallelisierung für die Auswertung des Polynoms in Formel \eqref{estrin} eine Laufzeit von $O(log\ n\ + \ 1) = O(log\ n)$, wohingegen das \textbf{Estrin Schema} bei einem Polynom vom Grad 4 insgesamt 4 Multiplikationen und 4 Additionen benötigt, was einer Laufzeit von $O(2n)$ entspricht. Durch Parallelisierung \textbf{Estrin Schemas} kommt man zwar auf etwa eine Laufzeit von $O(n)$, dies ist allerdings immer unter der Laufzeit von $O(long\ n)$. Aufgrund der Form der Teilausdrücke des \textbf{Estrin Schamas} ist wäre es zudem möglich, diese durch spezielle \textbf{Multiply-Accumulate} Befehle berechnen zu lassen was die Laufzeit weiter reduzieren würde. Aufgrund des nötigen Supports großer Zahlen ist dies für den gegebenen Anwendungsfall allerdings auch nicht möglich. Dadurch wurden sowohl das \textbf{Horner Schema} als auch das \textbf{Estrin Schema} nicht weiter in Betracht gezogen.\par
+Leider ist auch das Estrin-Schema nicht optimal auf einer GPU parallelisierbar, da zum einen initial jedes Polynom in Abhängigkeit seines Grades in Gruppen zerlegt werden muss und zum anderen die notwendigen Potenzen von $x$ berechnet werden müssen, bevor der Algorithmus angewandt werden kann. Wenn allerdings alle Potenzen von $x$ initial berechnet werden müssen und im weiteren Verlauf zur Verfügung stehen, ist im Kontext der GPU Programmierung der effektivste Weg das Polynom auszuwerten, indem alle Koeffizienten mit den nötigen Potenzen von $x$ multipliziert werden. Für diesen Schritt kann je Multiplikation ein Kernelthread verwendet werden, wodurch die Berechnung bei einer ausreichend großen Anzahl an Threads in einem Zyklus abgearbeitet werden kann. 
+Der verbleibende Schritt, in dem die Teilergebnisse zu einem Gesamtergebnis aufsummiert werden, kann zudem mit einer Laufzeit von $O(\log(n))$ abgearbeitet werden, wie später gezeigt wird.
+Dadurch ergibt sich bei berechneten Werten der Potenzen $x^0 \dots x^{n-1}$ von $x$ und einer guten Parallelisierung für die Auswertung des Polynoms in Formel \eqref{estrin} eine Laufzeit von $O(\log(n)+1) = O(\log(n))$, wohingegen das Estrin-Schema bei einem Polynom vom Grad 4 insgesamt 4 Multiplikationen und 4 Additionen benötigt, was einer Laufzeit von $O(2n)$ entspricht. Durch Parallelisierung des Estrin-Schemas erhält man etwa eine Laufzeit von $O(n)$, dies ist allerdings immer noch schlechter als die Laufzeit von $O(\log(n))$ der Eigenimplementierung. Aufgrund der Form der Teilausdrücke des Estrin-Schemas wäre es zudem möglich, diese durch spezielle \textit{Multiply-Accumulate} Befehle berechnen zu lassen, was die Laufzeit weiter reduzieren würde. Aufgrund des nötigen Supports großer Zahlen durch die GPU ist dies für den gegebenen Anwendungsfall allerdings auch nicht möglich. Dadurch wurden sowohl das Horner-Schema als auch das Estrin-Schema nicht weiter in Betracht gezogen.\par
 
-Der erste Schritt bei der Entwicklung eines Algorithmus musste somit sein, alle notwendigen Potenzen von x effizient auf einer GPU berechnen zu können. Als Basis für dies wurde der in \cite{Harris:2014} beschriebene \textsc{Prefix Sum Scan} verwendet. Dies ist ein Verfahren, mit dessen Hilfe aus einer Folge von Zahlen deren Partialsummen gebildet werden können. Beispielsweise ergibt sich die Präfixsumme der Zahlen $a_0$, $a_1$, $a_2$, $a_3$ aus aus den Partialsummen
+Der erste Schritt bei der Entwicklung eines Algorithmus musste somit sein, alle notwendigen Potenzen von $x$ effizient auf einer GPU berechnen zu können. Als Basis wurde der in \cite{Harris:2014} beschriebene \textsc{Prefix Sum Scan Algorithmus} verwendet. Dieses Verfahren bildet aus einer Folge von Zahlen deren Partialsummen. Beispielsweise ergibt sich die Präfixsumme der Zahlen $a_0$, $a_1$, $a_2$, $a_3$ aus aus den Partialsummen
 \begin{align}\label{prefix_sum}
 \begin{split}
 s_0 &= a_0 \\
@@ -24,24 +24,28 @@ s_3 &= a_0 + a_1 + a_2 + a_3
 \end{split}
 \end{align}
 
-Durch die Gleichungen \eqref{prefix_sum} kann man bereits erkennen, dass dieser Algorithmus leicht auf die Berechnung der Potenzen von $x$ adaptiert werden kann. Um dies zu erreichen, werden als Berechnungsrundlage nicht mehr unterschiedliche Zahlen, sondern lediglich $x$ verwendet. Zudem muss die Addition durch eine Multiplikation ersetzt werden. Dadurch ergeben sich die 4 Partialsummen in \eqref{prefix_sum} zu
+Durch die Gleichungen \eqref{prefix_sum} kann man bereits erkennen, dass dieser Algorithmus leicht auf die Berechnung der Potenzen $x^0 \dots x^{n-1}$ von $x$ adaptiert werden kann. Um dies zu erreichen, werden als Berechnungsrundlage nicht mehr unterschiedliche Zahlen, sondern lediglich $x$ verwendet. Zudem muss die Addition durch eine Multiplikation ersetzt werden. Dadurch ergeben sich die 4 Partialsummen in \eqref{prefix_sum} zu
 \begin{align}\label{prefix_x_prod}
 \begin{split}
 s_0 &= x = x^1 \\
-s_1 &= x * x = x^2 \\
-s_2 &= x * x * x = x^3 \\
-s_3 &= x * x * x * x = x^4
+s_1 &= x \cdot x = x^2 \\
+s_2 &= x \cdot x \cdot x = x^3 \\
+s_3 &= x \cdot x \cdot x \cdot x = x^4
 \end{split}
 \end{align}
 Wegen der Analogie zur Präfixsumme und der verwendeten Multiplikation wird dieses Verfahren im weiteren Verlauf als Präfixprodukt bezeichnet.
 
-Die Implementierung des Präfixproduktes erfolgt mittels eines Binärbaums, wie es auch unter \cite{Harris:2014} für die Präfixsumme beschrieben wird. Initial müssen dazu die einzelnen Blätter des Baumes mit der zu potenzierenden Variablen $x$ gefüllt werden. Dabei muss beachtet werden, dass das Ergebnis auch das Partialprodukt $x^0 = 1$ enthält, wodurch die Anzahl der Blätter des Baumes gleich der Anzahl der Koeffizienten des Ausgangspolynoms entsprechen muss. Zudem bedeutet die Verwendung eines Binärbaums, dass die Anzahl der Blätter eine Potenz von $2$ sein muss, wodurch beispielsweise bei $50$ Koeffizienten insgesamt $64$ Blätter zu zu erstellen sind.\newline
+Die Implementierung des Präfixproduktes erfolgt mittels eines Binärbaums, wie es auch in \cite{Harris:2014} für die Präfixsumme beschrieben wird. Initial müssen dazu die einzelnen Blätter des Baumes mit der zu potenzierenden Variablen $x$ gefüllt werden. Dabei muss beachtet werden, dass das Ergebnis auch das Partialprodukt $x^0 = 1$ enthält, wodurch die Anzahl der Blätter des Baumes gleich der Anzahl der Koeffizienten des Ausgangspolynoms entsprechen muss. Zudem bedeutet die Verwendung eines Binärbaums, dass die Anzahl der Blätter eine Potenz von $2$ sein muss, wodurch beispielsweise bei $50$ Koeffizienten insgesamt $64$ Blätter zu zu erstellen sind. Im weiteren Verlauf wird die Anzahl der Blätter als $l$ und die nächst größere Potenz von $2$ als $lu$ bezeichnet, wobei gilt $lu=2^u \ge l \ge l^{u-1}$.\newline
 
-Es sein an dieser Stelle angemerkt, dass bei der hier beschriebenen Implementierung der höchste Koeffizient immer den kleinsten Index besitzt. Aus diesem Grund wird auch vom Präfixprodukt ein Ergebnisarray bestehend aus allen Potenzen von $x$ erstellt, wobei der Grad der Potenz von $x$ mit zunehmendem Index abnimmt.\newline
+Es sei an dieser Stelle angemerkt, dass bei der hier beschriebenen Implementierung der höchste Koeffizient immer den kleinsten Index besitzt. Aus diesem Grund wird auch vom Präfixprodukt ein Ergebnisarray bestehend aus allen Potenzen von $x$ erstellt, wobei der Grad der Potenz von $x$ mit zunehmendem Index abnimmt.\newline
 
-Die Berechnung des Präfixproduktes kann in zwei Schritte, den \textbf{Reduce} und den \textbf{Down-Sweep Step}, aufgeteilt werden. Um die Arbeitsweise des Algorithmus zu beschreiben, sei das zu evaluierende Ausgangspolynom ein Polynom von Grad $d = 5$, bestehend aus $l = 6$ Koeffizienten:
+Die Berechnung des Präfixproduktes kann in zwei Schritte, den \textit{Reduce-} und den \textit{Down-Sweep-Step}, aufgeteilt werden. Um die Arbeitsweise des Algorithmus zu beschreiben, sei das zu evaluierende Ausgangspolynom von Grad $d = 5$, bestehend aus $l = 6$ Koeffizienten:
 $$P(x) = a_5x^5 + a_4x^4 + a_3x^3 + a_2x^2 + a_1x +a_0$$ 
-Für den \textbf{Reduce Step} müssen somit $lu = 2^3 = 8$ Blätter erzeugt werden, was in Abb. \ref{fig:reduce_step} auf unterster Ebene dargestellt ist. Beginnend mit einer Schrittweite von $1$ werden in jeder Ebene jeweils die 2, basierend auf der Schrittweite, aufeinanderfolgenden Zelleninhalte der darunter liegenden Ebenen miteinander multipliziert, wobei die Schrittweite mit jeder Ebene verdoppelt wird. Das Resultierende Array enthält somit alle Potenzen $x^{2^i}$, mit $i=0..log(lu)$. Da jede Ebene parallel abgearbeitet werden kann, ergibt sich mit optimaler Parallelisierung eine Laufzeit von $O(log(lu))$, was bei dem in Abb. \ref{fig:reduce_step} dargestellten Array mit $8$ Elementen $3$ Iterationen entspricht. Zudem werden für $8$ Koeffizienten $4$ Cuda Threads benötigt.\newline
+Für den Reduce-Step müssen somit $lu = 2^3 = 8$ Blätter erzeugt werden, was in Abb. \ref{fig:reduce_step} auf unterster Ebene dargestellt ist. 
+Beginnend mit einer Schrittweite von $1$ werden im Iterationsschritt $i=0$ die zwei aufeinanderfolgenden Zelleninhalte der Blätter multipliziert. 
+Anschließend wird die Schrittweite verdoppelt, wodurch im nächsten Iterationsschritt ($i=1$) die Elemente an Position $0$ und $2$ sowie $4$ und $6$ multipliziert werden.
+Der Algorithmus terminiert, wenn die Schrittweite kleiner der Anzahl an Blättern $lu$ ist.
+Das resultierende Array beinhaltet alle Potenzen $x^{2^i}$, mit $i=0 \dots \operatorname{ld}(lu)$. Da die Multiplikationen in jeder Ebene parallel durchgeführt werden können, ergibt sich bei optimaler Parallelisierung eine Laufzeit von $O(\log(lu))$, was bei dem in Abb. \ref{fig:reduce_step} dargestellten Array mit $8$ Elementen $3$ Iterationen entspricht. Zudem werden für $8$ Koeffizienten $4$ Cuda-Threads benötigt.\newline
 
 \begin{figure}
 \centering
@@ -49,7 +53,8 @@ Für den \textbf{Reduce Step} müssen somit $lu = 2^3 = 8$ Blätter erzeugt werd
 \caption{Reduce Step} \label{fig:reduce_step}
 \end{figure}
 
-Der zweite Schritt des Präfixproduktes ist der \textbf{Down-Sweep Step}, in dem die Potenzen $x^{2^i}$, mit $i=0..log(lu)$, in die Potenzen $x^j$, mit $j=0..lu-1$, überführt werden. Der Ablauf des \textbf{Down-Sweep Steps} ist in Abb. \ref{fig:down_sweep_step} dargestellt, wobei die Abarbeitungsreihenfolge im Gegensatz zum \textbf{Reduce Step} von oben nach unten erfolgt. Die Ausgangsbasis auf oberster Ebene ist das durch den \textbf{Reduce Step} erhaltene Array, in dem das erste Element dieses Arrays durch $1$ ersetzt werden muss. Dann werden wieder die zwei aufeinanderfolgenden Zelleninhalte der darüber liegenden Ebene multipliziert, wobei die Schrittweite der entspricht, die zuletzt im \textbf{Reduce Step} verwendet wurde. In Abb. \ref{fig:down_sweep_step} wurde daher mit einer Schrittweite von $4$ begonnen. Nachdem die zwei aufeinanderfolgenden Zelleninhalte multipliziert wurden, wird der Inhalt das Element mit höherem Index auf aktueller Ebene durch das mit niedrigerem Index auf der darüber liegenden Ebene ersetzt. Mit jeder Ebene wird die Schrittweite wieder halbiert und der Algorithmus terminiert, wenn die Schrittweite kleiner $1$ ist. Das Ergebnis ist ein Array mit allen Potenzen von $x$, wobei der Grad mit steigendem Array Index abnimmt. Auch der \textbf{Down-Sweep Step} benötigt, wenn man die initiale Ersetzung des Elements an Index $0$ mit dem Wert $1$ außen vor lässt, bei optimaler Parallelisierung eine Laufzeit von $O(long(lu))$, was zusammen mit dem \textbf{Reduce Step} eine Gesamtlaufzeit von $O(2*log(lu))$ ergibt. Die Anzahl der notwendigen Cuda Threads ist beim \textbf{Down-Sweep Step} gleich der Anzahl der Threads des \textbf{Reduce Steps}, wodurch beide Schritte wie in \cite{Harris:2014} beschrieben durch einen Kernel abgearbeitet werden können. In der durchgeführten Implementierung wurde die beiden Schritte aufgrund der leichteren Testbarkeit in zwei Kernel aufgeteilt.\newline
+Der zweite Schritt des Präfixproduktes ist der Down-Sweep-Step, in dem die Potenzen $x^{2^i}$, mit $i=0 \dots \log(lu)$, in die Potenzen $x^j$, mit $j=0 \dots lu-1$, überführt werden. Der Ablauf des {Down-Sweep-Steps ist in Abb. \ref{fig:down_sweep_step} dargestellt, wobei die Abarbeitungsreihenfolge im Gegensatz zum Reduce-Step von oben nach unten erfolgt. Die Ausgangsbasis auf oberster Ebene ist das durch den Reduce-Step erhaltene Array, in dem das erste Element dieses Arrays durch $1$ ersetzt werden muss. Dann werden im ersten Iterationsschritt ($i=0$) wieder die zwei aufeinanderfolgenden Zelleninhalte der darüber liegenden Ebene multipliziert, wobei die Schrittweite derjenigen entspricht, die zuletzt im Reduce-Step verwendet wurde. In Abb. \ref{fig:down_sweep_step} wurde folglich mit einer Schrittweite von $4$ begonnen, wodurch das Element an Position $0$ mit dem an Position $3$ multipliziert wird. Danach wird das Element an Position $3$ durch das Element ersetzt, das im vorherigen Iterationsschritt an Position $0$ war. Da beide Schritte in einem Thread durchgeführt werden, muss das Element an Position $0$ vor der Multiplikation zwischengespeichert werden, da sonst das Ergebnis der Multiplikation und nicht der Wert des Elements der im vorherigen Iterationsschritt kopiert werden würde.
+Mit jedem Iterationsschritt wird die Schrittweite wieder halbiert und der Algorithmus terminiert, wenn die Schrittweite kleiner $1$ ist. Das Ergebnis ist ein Array mit allen Potenzen $x^0 \dots x^{n-1}$ von $x$, wobei der Grad der Potenz mit steigendem Array Index abnimmt. Auch der Down-Sweep-Step benötigt bei optimaler Parallelisierung eine Laufzeit von $O(\log(lu))$, was zusammen mit dem Reduce-Step eine Gesamtlaufzeit von $O(2 \cdot \log(lu))$ ergibt. Die Anzahl der notwendigen Cuda-Threads ist beim Down-Sweep-Step gleich der Anzahl der Threads des Reduce-Steps, wodurch beide Schritte wie in \cite{Harris:2014} beschrieben durch einen Kernel abgearbeitet werden können. In der durchgeführten Implementierung wurde die beiden Schritte aufgrund der leichteren Testbarkeit jedoch in zwei Kernel aufgeteilt.\newline
 
 \begin{figure}[!htb]
 \centering
@@ -57,8 +62,8 @@ Der zweite Schritt des Präfixproduktes ist der \textbf{Down-Sweep Step}, in dem
 \caption{Down-Sweep Step} \label{fig:down_sweep_step}
 \end{figure}
 
-Es sei an dieser Stelle angemerkt, dass die Laufzeit für Multiplikationen, Additionen, etc. vorerst vernachlässigt bzw. ignoriert wurde um die Laufzeit des Algorithmus an sich leichter darstellen zu können.\newline
-Wie bereits erwähnt können, wenn alle Potenzen von $x$ berechnet wurden, diese parallel mit den zugehörigen Koeffizienten multipliziert werden. Dies ist in Abb. \ref{fig:parallel_multiplication} dargestellt. Bei $lu = 8$ Koeffizienten werden somit 8 Threads gestartet, wobei Thread $t$ Koeffizient $a_t$ mit $x^t$ multipliziert. Da $lu >= l$ wurden fehlende Koeffizienten in der Implementierung auf 0 gesetzt.
+Es sei an dieser Stelle angemerkt, dass die Laufzeit für Multiplikationen, Additionen, etc. vorerst vernachlässigt bzw. ignoriert wurde, um die Laufzeit des Algorithmus an sich leichter darstellen zu können.\newline
+Wie bereits erwähnt können, wenn alle Potenzen von $x$ berechnet wurden, diese parallel mit den zugehörigen Koeffizienten multipliziert werden. Dies ist in Abb. \ref{fig:parallel_multiplication} dargestellt. Bei $lu = 8$ Koeffizienten müssen demnach 8 Threads gestartet werden, wobei Thread $t$ Koeffizient $a_t$ mit $x^t$ multipliziert. Da $lu >= l$ wurden fehlende Koeffizienten in der Implementierung auf 0 gesetzt.
 
 \begin{figure}
 \centering
@@ -66,12 +71,12 @@ Wie bereits erwähnt können, wenn alle Potenzen von $x$ berechnet wurden, diese
 \caption{Parallele Multiplikation} \label{fig:parallel_multiplication}
 \end{figure}
 
-Als letzten Schritt muss die Summe der in Abb. \ref{fig:parallel_multiplication} erhaltenen Produkte gebildet werden. Implementiert wurde dies als binärer Summenbaum, der im Ablauf gleich dem \textbf{Reduce Step} des Präfixproduktes ist. Der einzige Unterschied zum \textbf{Reduce Step} besteht darin, dass die einzelnen Elemente des Ausgangsarray nicht multipliziert werden sondern addiert. Als Resultat erhält man die Summe aller Arrayelemente in einer Laufzeit von $O(log(lu))$
+Als letzten Schritt muss die Summe der in Abb. \ref{fig:parallel_multiplication} erhaltenen Produkte gebildet werden. Implementiert wurde dies mit einem binären Summenbaum, der im Ablauf gleich dem Reduce-Step des Präfixproduktes ist. Der einzige Unterschied zum Reduce-Step besteht darin, dass die einzelnen Elemente des Ausgangsarray nicht multipliziert, sondern addiert werden. Als Resultat erhält man die Summe aller Arrayelemente in einer Laufzeit von $O(log(lu))$.
 
-\subsection{Arbitrary-precision arithmetic und Erweiterungsfelder über GF2n}
-Das größte Problem bei der Implementierung besteht darin, dass zum einen die einzelnen Koeffizienten mit mehreren tausend Bit sehr groß werden können und zum anderen diese Elemente eines Erweiterungsfeldes über $GF(2n)$ seien sollten, was somit nicht mehr durch normale Rechenoperationen abgearbeitet werden konnte. Die getesteten Bibliotheken boten hier zwar vereinzelt Lösungen für den Umgang mit großen Zahlen, enthielten jedoch keinerlei Unterstützung für Erweiterungsfelder. Somit konnte nicht auf vorhandene Bibliotheken zurück gegriffen werden und eine Eigenimplementierung erstellt werden, die sowohl Erweiterungsfelder über großen Zahlen unterstützt als auch eine einfache Integration in den Algorithmus des Präfixproduktes zur Verfügung stellt.\newline
+\subsection{Arbitrary-precision arithmetic und Erweiterungsfelder über $GF(2^n)$}
+Die Probleme bei der Implementierung bestanden darin, dass die einzelnen Koeffizienten mehrere tausend Bits groß werden können und diese zudem Elemente eines Erweiterungsfeldes über $GF(2^n)$ seien sollten, wodurch herkömmliche Rechenoperationen an ihre Grenzen schlagen. Einige der getesteten Bibliotheken bieten zwar vereinzelte Lösungen für den Umgang mit großen Zahlen an, enthalten jedoch keine Unterstützung für Erweiterungsfelder. Somit konnte nicht auf vorhandene Bibliotheken zurück gegriffen werden und es musste eine Eigenimplementierung erstellt werden, die sowohl Erweiterungsfelder über großen Zahlen unterstützt als auch eine einfache Integration in den Algorithmus des Präfixproduktes zur Verfügung stellt.\newline
 
-Da der größte Datentyp auf einer 64 Bit Architektur 64 Bit entspricht, wurden die $n$ Bits in Blöcke gleicher Größe aufgeteilt. Als Blockgröße wurden 32 Bit gewählt, um die Implementierung auch auf 32 Bit Systemen ausführen zu können. Bei reiner Verwendung auf 64 Bit Architekturen sollte allerdings noch geprüft werden, ob die Verwendung von 64 Bit Blöcken Performanceverbesserungen bringen kann. Somit werden bei $n$ Bits $$m = \lceil n/32 \rceil$$ Blöcke benötigt, die im weiteren als Chunks bezeichnet werden. Da die Anzahl der Bits nicht durch $32$ teilbar sein muss und somit die Anzahl der Bits aller Chunks größer sein kann als die Anzahl der Bits der Koeffizienten, werden diese bei Betrachtung der Gesamtheit aller Chunks rechts angeordnet und der Chunk ganz links mit Nullen auf der linken Seite aufgefüllt. Zur Veranschaulichung ist dies für einen Koeffizienten von 93 Bit in Abb. \ref{fig:chunk_array} dargestellt.\newline
+Zur Unterstützung großer Zahlen wurden die $n$ Bits in 32 Bit Blöcke aufgeteilt. Es sollte allerdings noch geprüft werden, ob eine Verwendung von 64 Bit Blöcken Performanceverbesserungen bringen kann. Bei $n$ Bits werden somit $$m = \lceil n/32 \rceil$$ Blöcke benötigt, die im weiteren als Chunks bezeichnet werden. Da die Anzahl der Bits nicht durch $32$ teilbar sein muss und somit die Anzahl der Bits aller Chunks größer sein kann als die Anzahl der Bits der Koeffizienten, werden diese bei Betrachtung der Gesamtheit aller Chunks rechts angeordnet und der Chunk ganz links mit Nullen auf der linken Seite aufgefüllt. Zur Veranschaulichung ist dies für einen Koeffizienten von 93 Bit in Abb. \ref{fig:chunk_array} dargestellt.\newline
 
 \begin{figure}
 \centering
@@ -79,64 +84,66 @@ Da der größte Datentyp auf einer 64 Bit Architektur 64 Bit entspricht, wurden 
 \caption{Array aus Chunks} \label{fig:chunk_array}
 \end{figure}
 
-Auf Basis dieser Datenhaltung der großen Zahlen wurden in einem weiteren Schritt Algorithmen für Addition und Multiplikation über $GF(2n)$ Erweiterungsfeldern umgesetzt. Da die Basis dieser Erweiterungsfelder der Körper $GF(2)$ ist, entspricht die Addition zweier Zahlen des Erweiterungskörpers einer $XOR$-Verknüpfung dieser. Dadurch ergeben sich bei der Addition keinerlei Abhängigkeiten der einzelnen Chunks untereinander, was dazu führt, dass bei der Addition zweier großer Zahlen jeder Chunk der einen Zahl mit dem zugehörigen Chunk der anderen völlig parallel addiert werden kann und somit die Addition auf einer GPU bei genügend Threads in einem Zyklus abgearbeitet werden kann.\newline
+Auf Basis dieser Datenhaltung der großen Zahlen wurden in einem weiteren Schritt Algorithmen für Addition und Multiplikation über $GF(2^n)$ Erweiterungsfeldern umgesetzt. Da die Basis dieser Erweiterungsfelder der Körper $GF(2)$ ist, entspricht die Addition zweier Zahlen des Erweiterungskörpers einer $XOR$-Verknüpfung. Dadurch ergeben sich bei der Addition keine Abhängigkeiten der einzelnen Chunks untereinander, was dazu führt, dass bei der Addition zweier großer Zahlen jeder Chunk der einen Zahl mit dem zugehörigen Chunk der anderen parallel addiert werden kann und somit die Addition auf einer GPU bei genügend Threads in einem Zyklus abgearbeitet werden kann.\newline
 
-Ein größeres Problem stellt die Multiplikation zweier großer Zahlen über Erweiterungsfelder dar. Die Multiplikation über Erweiterungsfeldern $GF(2n)$ läuft am Beispiel der Schulbuchmethode folgendermaßen ab:
+Ein größeres Problem stellt die Multiplikation zweier großer Zahlen über Erweiterungsfelder dar. Die Multiplikation über Erweiterungsfeldern $GF(2^n)$ läuft am Beispiel der Schulbuchmethode folgendermaßen ab:
 \begin{enumerate}
-\item Beginnend bei der höchsten Stelle\footnote{Als höchste Stelle wird hier aufgrund ihres höchsten Zahlenwertes die Ziffer am weitesten links bezeichnet.} des Multiplikators wird diese mit dem Multiplikanten multipliziert. Da jede Stelle des Multiplikators entweder $1$ oder $0$ sein kann, ist dies eine reine Existenzprüfung und es wird somit lediglich geprüft, ob der Multiplikant in diesem Schritt verwendet wird oder nicht.
-\item Dann wird mit der nächstniedrigeren Stelle fortgefahren. Das Ergebnis in diesem Schritt wird jetzt um 1 nach rechts versetzt zum Ergebnis aus Schritt 1 addiert. Dies wird für alle Stellen des Multiplikators wiederholt. 
-\item Da das Ergebnis wieder im Erweiterungsfeld $GF(2n)$ liegen muss, muss dieses durch das irreduzible Polynom dividiert werden, sollte es die durch das Feld geforderte Anzahl von Bits überschreiten.
+\item Beginnend bei der höchsten Stelle\footnote{Als höchste Stelle wird hier aufgrund ihres höchsten Zahlenwertes die Ziffer am weitesten links bezeichnet.} des Multiplikators wird diese mit dem Multiplikanten multipliziert. Da jede Stelle des Multiplikators entweder $1$ oder $0$ sein kann, ist dies eine reine Existenzprüfung und es ist lediglich relevant, ob der Multiplikant in diesem Schritt verwendet wird oder nicht.
+\item Anschließend wird mit der nächstniedrigeren Stelle fortgefahren. Das Ergebnis in diesem Schritt wird um 1 nach rechts versetzt zum Ergebnis aus Schritt 1 addiert. Dies wird für alle Stellen des Multiplikators wiederholt. 
+\item Da das Ergebnis wieder im Erweiterungsfeld $GF(2^n)$ liegen muss, muss dieses durch das irreduzible Polynom dividiert werden, sollte es die durch das Feld geforderte Anzahl von Bits überschreiten.
 \end{enumerate}
-Auch die bei der Multiplikation nötigen Additionen ergeben sich durch triviale $XOR$-Verknüpfungen. Die Anzahl der Bits wird sich, wenn davon ausgegangen wird, dass Multiplikator und Multiplikant gleich viele Bits enthalten, verdoppeln. Da alle Elemente des Erweiterungsfelds $GF(2n)$ jedoch lediglich $n$ Bits lang sind, ist dies eine unnötige Verschwendung von Speicher. Wie in der Modulararithmetik über Primzahlen gilt auch beim Rechnen über Erweiterungsfeldern
+Auch die bei der Multiplikation nötigen Additionen ergeben sich durch triviale $XOR$-Verknüpfungen. Die Anzahl der Bits wird sich, wenn davon ausgegangen wird, dass Multiplikator und Multiplikant gleich viele Bits enthalten, verdoppeln. Da alle Elemente des Erweiterungsfelds $GF(2^n)$ $n$ Bits lang sind, ist dies eine unnötige Verschwendung von Speicher. Wie in der Modulararithmetik über Primzahlen gilt auch beim Rechnen über Erweiterungsfeldern
 $$
-a \;\bmod\; n * b \;\bmod\; n \equiv a * b \;\bmod\; n
+a \;\bmod\; n + b \;\bmod\; n \equiv a + b \;\bmod\; n
 $$
-Dadurch ist es möglich, jeden Summanden einzeln zu reduzieren und diese anschließend über eine $XOR$-Verknüpfung zu addieren, ohne das Erweiterungsfeld zu verlassen. Implementiert wurde der unter \cite{Cetin:1998} beschriebene Algorithmus zur bitweisen Montgomery Multiplikation. Hierbei wird ausgehen vom Bit mit dem größten Index innerhalb des Chunks mit dem größten Index dieses Bit mit dem Multiplikanten multipliziert und über eine $XOR$-Verknüpfung mit dem noch leeren Ergebnis verknüpft. Anschließend wird der Multiplikant um 1 nach links geshiftet und mit Hilfe des irreduziblen Polynoms reduziert. Dann wird der neu entstandene Multiplikant mit dem Bit mit dem zweit höchsten Index innherlb des Chunks mit dem höchsten Index multipliziert und mit dem Ergebnis verknüpft, wonach wieder ein Shift des Multiplikanten um 1 nach links und eine Reduktion erfolgt. Es wird nach diesem Schema weiter verfahren und zuerst der Index des Bits innerhalb eines Chunks erniedrigt und anschließend der Index des Chunks. Durch diese Vorgehensweise werden insgesamt $n+1$ Bit für das Ergebnis benötigt, im Gegensatz zu den vorher erwähnten $2n$ der Schulbuchmethode.\newline
-Wenn man die Laufzeit betrachtet, bietet dieses Verfahren jedoch noch keinerlei Optimierung hinsichtlich Parallelisierung. Die Hauptschleife, in der die Multiplikation mit jedem Bit des Multiplikators erfolgt, wird insgesamt $n$ mal durchlaufen. Die $XOR$-Verknüpfung des Ergebnisses und die Reduktion des geshifteten Multiplikanten kann zwar in einem Zyklus durchgeführt werden, Probleme hinsichtlich der Laufzeit bereiten jedoch die Prüfung des Multiplikators auf $0$ oder $1$ und die notwendige Shiftoperation. In beiden Operationen sind aktuell noch Schleifen enthalten, wobei, wenn $k = Bits\_pro\_Chunks$ und $m = Anzahl\_Chunks$ mit $n=k*n$, die Bitprüfung eine Worst-Case Laufzeit von $O(k)$ und die Shiftoperation eine Laufzeit von $O(m)$ besitzen. Zusammen mit der Anzahl der Iterationen der Hauptfunktion ergibt sich eine Laufzeit von $O(n * (m+k))$.
+Dadurch ist es möglich, jeden Summanden einzeln zu reduzieren und diese anschließend zu addieren, ohne das Erweiterungsfeld zu verlassen. Implementiert wurde der unter \cite{Cetin:1998} beschriebene Algorithmus zur bitweisen Montgomery Multiplikation. Hierbei wird ausgehen vom Bit mit dem größten Index, innerhalb des Chunks mit dem größten Index, dieses Bit mit dem Multiplikanten multipliziert und über eine $XOR$-Verknüpfung mit dem noch leeren Ergebnis verknüpft. Anschließend wird der Multiplikant um 1 nach links geshiftet und mit Hilfe des irreduziblen Polynoms reduziert. Dann wird der neu entstandene Multiplikant mit dem Bit, mit dem zweit höchsten Index innerhalb des Chunks, mit dem höchsten Index multipliziert und mit dem Ergebnis verknüpft, wonach wieder ein Shift des Multiplikanten um 1 nach links und eine Reduktion erfolgt. Es wird nach diesem Schema weiter verfahren und zuerst der Index des Bits innerhalb eines Chunks erniedrigt und anschließend der Index des Chunks. Durch diese Vorgehensweise werden insgesamt $n+1$ Bit für das Ergebnis benötigt, im Gegensatz zu den vorher erwähnten $2n$ der Schulbuchmethode.\newline
+Wenn man die Laufzeit betrachtet, bietet dieses Verfahren noch keinerlei Optimierung hinsichtlich Parallelisierung. Die Hauptschleife, in der die Multiplikation mit jedem Bit des Multiplikators erfolgt, wird insgesamt $n$ mal durchlaufen. Die $XOR$-Verknüpfung des Ergebnisses und die Reduktion des geshifteten Multiplikanten kann zwar in einem Zyklus durchgeführt werden, Probleme hinsichtlich der Laufzeit bereiten jedoch die Prüfung des Multiplikators auf $0$ oder $1$ und die notwendige Shiftoperation. In beiden Operationen sind aktuell noch Schleifen enthalten, wobei, wenn $k = Bits\_pro\_Chunks$ und $m = Anzahl\_Chunks$ mit $n=k \cdot n$, die Bitprüfung eine Worst-Case Laufzeit von $O(k)$ und die Shiftoperation eine Laufzeit von $O(m)$ besitzen. Zusammen mit der Anzahl der Iterationen der Hauptfunktion ergibt sich eine Laufzeit von $O(n \cdot (m+k))$.
 
 \subsection{Laufzeitanalyse des Cuda Algorithmus}
-Eine Zusammenfassung der Laufzeit des Cuda Algorithmus ist in Tabelle \ref{table:lzcuda} dargestellt. Im CPU Algorithmus des Trevisan RSH Extrktors wurde die Polynomevaluierung mit Hilfe des \textbf{Horner Schemas} implementiert, das eine Laufzeit von $O(2l)$ besitzt. Diese Laufzeit muss noch mit der Laufzeit der verwendeten Algorithmen zur Multiplikation und Addition großer Zahlen über Erweiterungsfeldern multipliziert werden, wobei hier wahlweise die OpenSSL oder NTL verwendet wurde.
+Eine Zusammenfassung der Laufzeit des Cuda Algorithmus ist in Tabelle \ref{table:lzcuda} dargestellt. Im CPU Algorithmus des Trevisan RSH Extraktors wurde die Polynomevaluierung mit Hilfe des Horner-Schemas implementiert, das eine Laufzeit von $O(2l)$ besitzt. Diese Laufzeit muss noch mit der Laufzeit der verwendeten Algorithmen zur Multiplikation und Addition großer Zahlen über Erweiterungsfeldern multipliziert werden, wobei hier wahlweise die OpenSSL oder NTL verwendet wurde.
 
 \begin{table}
 \centering
 \begin{tabular}{ll}
-\hline \hline
+\toprule
 Funktion & Laufzeit \\
-\hline
-Reduce Step: & $O(log(lu)*(n*(m+k)))$ \\
-Down-Sweep Step: & $O(log(lu)*(n*(m+k)))$ \\
-Parallele Multiplikation: & $O(n*(m+k))$ \\
-Sub-Sum Tree: & $O(log(lu))$ \\
-\hline
-Gesamt: & $O(2*log(lu)*(n*(m+k)) + n*(m+k) + log(lu))$ \\
+\midrule
+Reduce-Step & $O(log(lu) \cdot (n \cdot (m+k)))$ \\
+Down-Sweep-Step & $O(log(lu) \cdot (n \cdot (m+k)))$ \\
+Parallele Multiplikation & $O(n \cdot (m+k))$ \\
+Sub-Sum-Tree & $O(log(lu))$ \\
+\midrule
+Gesamt: & $O(2 \cdot log(lu) \cdot (n \cdot (m+k)) + n \cdot (m+k) + log(lu))$ \\
+\bottomrule
 \end{tabular}
 \caption{Laufzeit des Cuda Algorithmus}
 \label{table:lzcuda}
 \end{table}
 
-Insgesamt bedeutet dies, dass wenn man eine Laufzeit des Cuda Algorithmus kleiner $2l$ erreicht, eine Beschleunigung des RSH Extraktors durch die Auslagerung der Polynomevaluierung auf eine Grafikkarte möglich ist. 
+Insgesamt bedeutet dies, dass eine Beschleunigung des RSH Extraktors durch die Auslagerung der Polynomevaluierung auf eine Grafikkarte möglich ist, wenn man eine Laufzeit des Cuda Algorithmus kleiner $2l$ erreicht.
 
 \subsection{Ausblick und Optimierung des Cuda Algorithmus}
-Der wichtigste Schritt dies zu erreichen, ist einen Cuda Algorithmus für die Multiplikation zweier großer Zahlen über Erweiterungsfeldern zu finden, der eine Laufzeit $<O(l)$ besitzt. Einige Algorithmen hierzu sind in Tabelle \ref{table:bnmult} aufgeführt. Als Referenz wurde die zusätzlich die Laufzeit Schulbuchmethode angegeben, wobei sich die Laufzeit der Implementierung von dieser unterscheidet, da im verwendeten Binärsystem jede Multiplikation lediglich eine Entscheidung darüber ist, ob der Multiplikant im aktuellen Iterationsschritt verwendet wird oder nicht.
+Der wichtigste Schritt eine Beschleunigung des Cuda Algorithmus zu erreichen, ist einen Cuda Algorithmus für die Multiplikation zweier großer Zahlen über Erweiterungsfeldern zu finden, der eine Laufzeit $<O(l)$ besitzt. Einige Algorithmen hierzu sind in Tabelle \ref{table:bnmult} aufgeführt. Als Referenz wurde die zusätzlich die Laufzeit Schulbuchmethode angegeben, wobei sich die Laufzeit der Implementierung von dieser unterscheidet, da im verwendeten Binärsystem jede Multiplikation lediglich eine Entscheidung darüber ist, ob der Multiplikant im aktuellen Iterationsschritt verwendet wird oder nicht.
 
 \begin{table}
 \centering
 \begin{tabular}{ll}
-\hline \hline
+\toprule
 Algorithmus & Laufzeit \\
-\hline
-Schulbuchmethode: & $O(n^2)$ \\
-Karazuba-Algorithmus: & $O(n^{log_2(3)})$ \\
-Toom-Cook-Algorithmus: & $O(n*log(n)*2^{\sqrt{2*log(n)}})$ \\
-Schönhage-Strassen-Algorithmus: & $O(n*log(n)*log(log(n)))$ \\
+\midrule
+Schulbuchmethode & $O(n^2)$ \\
+Karazuba-Algorithmus & $O(n^{log_2(3)})$ \\
+Toom-Cook-Algorithmus & $O(n*log(n)*2^{\sqrt{2*log(n)}})$ \\
+Schönhage-Strassen-Algorithmus & $O(n*log(n)*log(log(n)))$ \\
+\bottomrule
 \end{tabular}
 \caption{Algorithmen zur Multiplikation großer Zahlen}
 \label{table:bnmult}
 \end{table}
 
-Diese Algorithmen sind die wichtigsten Vertreter wenn es um die Multiplikation großer Zahlen geht. Es muss im weiteren einerseits geprüft werden, wie sich diese Algorithmen im Zusammenhang mit Erweiterungsfeldern $GF(2n)$ verhalten und andererseits, ob sich diese effizient parallelisieren lassen um die gewünschte Laufzeit zu erreichen\newline
+Diese Algorithmen sind die wichtigsten Vertreter, wenn es um die Multiplikation großer Zahlen geht. Es muss im weiteren einerseits geprüft werden, wie sich diese Algorithmen im Zusammenhang mit Erweiterungsfeldern $GF(2^n)$ verhalten und andererseits, ob sich diese effizient parallelisieren lassen, um die gewünschte Laufzeit zu erreichen\newline
 
-Bei der Betrachtung der Profiler Analyse in Abb. \ref{figure:timeline} stellt man ein weiteres Problem des Algorithmus fest. Durch die Implementierung mit Hilfe eines Binärbaums werden bspw. im \textbf{Reduce Step}in Iterationsschritt $0$ alle gestarteten Threads auch ausgenutzt. In Iterationsschritt $1$ hat sich die Anzahl der Blätter jedoch bereits halbiert, wodurch die Hälfte der gestarteten Threads im Leerlauf ist und durch Synchronisierung auf die arbeiteten Threads wartet. Die Anzahl der wartenden Threads wird in jedem Iterationsschritt verdoppelt und wenn der Algorithmus am Wurzelknoten angekommen ist, arbeitet von den anfangs gestarteten Threads nur noch der erste und alle anderen Threads warten auf diesen.
+Bei der Betrachtung der Profiler Analyse in Abb. \ref{figure:timeline} stellt man ein weiteres Problem des Algorithmus fest. Durch die Implementierung mit Hilfe eines Binärbaums werden beispielsweise im Reduce-Step in Iterationsschritt $0$ alle gestarteten Threads ausgenutzt. In Iterationsschritt $1$ hat sich die Anzahl der Blätter jedoch bereits halbiert, wodurch die Hälfte der gestarteten Threads im Leerlauf ist und durch Synchronisierung auf die arbeiteten Threads wartet. Die Anzahl der wartenden Threads wird in jedem Iterationsschritt verdoppelt; wenn der Algorithmus am Wurzelknoten angekommen ist, arbeitet nur noch der erste Thread, alle anderen Threads warten auf ihn.
 
 \begin{figure}
 \centering
@@ -145,81 +152,76 @@ Bei der Betrachtung der Profiler Analyse in Abb. \ref{figure:timeline} stellt ma
 \label{figure:timeline}
 \end{figure}
 
-Dieser Sachverhalt ist auch gut erkennbar, wenn man sich die prozentuale Ausführungszeit des \textbf{Reduce Steps} in Abb. \ref{figure:exec_count} ansieht. Es scheint nahezu so, als wäre der ausgeführte Kernel zu fast 100\% inaktiv und mit der Synchronisierung der Threads beschäftigt. Es kann evtl. zu einer optimierten Laufzeit führen wenn man versucht, die Parameter für alle zu extrahierenden Bits gesamt zu übergeben. Dadurch könnten pro Iterationsschritt alle Werte dieser Ebene für alle $x$ berechnet werden, was evtl. die Gesamtsynchronisationszeit verringert. Es könnte auch versucht werden, bei teilweise vorhandenen Werten einer Ebene den folgenden \textbf{Down-Sweep Step} bereits bedingt zu starten und somit die Ausführung dieser Schritte zu überlagern. Eine optimale Lösung erfordert hier noch weitere Tests und auch eine durchdachte Synchronisation der einzelnen Komponenten um wirklich eine Steigerung der Laufzeit zu gewähren.
+Dieser Sachverhalt ist auch gut erkennbar, wenn man sich die prozentuale Ausführungszeit des Reduce-Steps in Abb. \ref{figure:exec_count} ansieht. Der ausgeführte Kernel ist zu fast $100\%$ inaktiv und mit der Synchronisierung der Threads beschäftigt. Es kann eventuell zu einer verbesserten Laufzeit führen wenn man versucht, die Parameter für alle zu extrahierenden Bits gesamt zu übergeben. Dadurch könnten pro Iterationsschritt alle Werte dieser Ebene für alle $x$ berechnet werden, was eventuell die Gesamtsynchronisationszeit verringert. Es könnte auch versucht werden, bei teilweise vorhandenen Werten einer Ebene den folgenden Down-Sweep-Step bereits bedingt zu starten und somit die Ausführung dieser Schritte zu überlagern. Eine optimale Lösung erfordert noch weitere Tests und auch eine durchdachte Synchronisation der einzelnen Komponenten um eine Steigerung der Laufzeit zu erreichen.
 
 \begin{figure}
 \centering
 \includegraphics[scale=0.5]{Kapitel/Implementierung/cudaPrefProdReduce_execution_count.png}
 \caption{Prozentuale Ausführungszeit des Reduce Steps}
 \label{figure:exec_count}
+Etwa $1-2\%$ der Ausführungszeit des Kernels werden für Integeroperationen verwendet. Die restliche Zeit ist der Kernel durch Synchronisierung und nicht optimale Ausnutzung der GPU inaktiv.
 \end{figure}
 
-Ein weiteres Problem dass sich aufgestellt hat ist die Speicherverwaltung im Cuda Code. In Cuda können 5 verschiedene Speichertypen verwendet werden, die sich alle hinsichtlich Sichtbarkeit, Zugriffsgeschwindigkeit und Größe unterscheiden
+Ein weiteres Problem ist die Speicherverwaltung im Cuda-Code. Für die verwendete Nvidia GPU K20c werden fünf verschiedene Speichertypen unterstützt, die sich alle hinsichtlich Sichtbarkeit, Zugriffsgeschwindigkeit und Größe unterscheiden
 
 \begin{enumerate}
 \item Register
-	\begin{enumerate}
+	\begin{itemize}
 	\item On-Chip Memory, daher sehr schnelle Zugriffszeiten
 	\item Sichtbarkeit nur innerhalb eines Threads
-	\item Tesla K20c: 65536 Register pro Block
-	\item Verwendete Register müssen zur Compilierzeit feststehen
-	\end{enumerate}
+	\item Tesla K20c: $65536$ Register pro Block
+	\item Verwendete Register müssen zur Kompilierzeit feststehen
+	\end{itemize}
 \item Shared Memory
-	\begin{enumerate}
+	\begin{itemize}
 	\item On-Chip Memory, daher sehr schnelle Zugriffszeiten
 	\item Sichtbarkeit nur innerhalb eines Blocks
-	\item Tesla K20c: 49152 Bytes pro Block
-	\end{enumerate}
+	\item Tesla K20c: $49152$ Bytes pro Block
+	\end{itemize}
 \item Global Memory
-	\begin{enumerate}
+	\begin{itemize}
 	\item Off-Chip Memory und nicht gecached, daher langsame Zugriffszeiten
 	\item Sichtbarkeit global
-	\item Tesla K20c: 4800 MBytes
-	\end{enumerate}
+	\item Tesla K20c: $4800$ MBytes
+	\end{itemize}
 \item Local Memory
-	\begin{enumerate}
+	\begin{itemize}
 	\item Off-Chip Memory und nicht gecached, daher langsame Zugriffszeiten
 	\item Sichtbarkeit nur innerhalb eines Threads
 	\item Anhängig von Global Memory
-	\end{enumerate}
+	\end{itemize}
 \item Const Memory
-	\begin{enumerate}
+	\begin{itemize}
 	\item Off-Chip Memory, aber gecached, daher sehr schnelle Zugriffszeiten
 	\item Sichtbarkeit global
-	\item Tesla K20c: 65536 Bytes
-	\end{enumerate}
+	\item Tesla K20c: $65536$ Bytes
+	\end{itemize}
 \end{enumerate}
 
- Aktuell werden alle verwendeten Variablen noch im globalen Speicher der GPU gehalten, was jedoch zu langsamen Zugriffszeiten führt. Ein weiterer Schritt wäre zu prüfen, in wie weit der verwendetet Speicher über Shared Memory gepuffert und somit die Zugriffszeiten beschleunigt werden können. Hierbei müssen jedoch noch mehrere Dinge bedacht werden. Angenommen es wird eine Feldgröße von $1000$ Bit verwendet und jeder Threads möchte lediglich sein Ergebnis puffern, so werden bei einer Maximalen Anzahl von 1024 Threads pro Block insgesamt $10240000\ Bits = 1280000\ Bytes$ benötigt, was die Größe von 49152 Bytes pro Block bei weitem übersteigt. Passt man die Anzahl der Threads pro Block an die Größe der benötigten Shared Memory pro Thread an, reduziert sich die Anzahl der Threads pro Block auf 49. Dadurch erhöht sich wiederum die Anzahl der benötigten Blöcke, was eine globale Synchronisierung der Blöcke unvermeidlich macht. Es muss sich aus diesem Grund genau überlegt werden, welche Daten gepuffert werden sollen und wie sich die entstehende Anzahl der Threads pro Block auf die globale Performance auswirkt.
-
-\begin{table}
-\centering
-\begin{tabular}{ll}
-\hline \hline
-Type & Laufzeit \\
-\hline
-Schulbuchmethode: & $O(n^2)$ \\
-Karazuba-Algorithmus: & $O(n^{log_2(3)})$ \\
-Toom-Cook-Algorithmus: & $O(n*log(n)*2^{\sqrt{2*log(n)}})$ \\
-Schönhage-Strassen-Algorithmus: & $O(n*log(n)*log(log(n)))$ \\
-\end{tabular}
-\caption{Speichertypen des Multiprozessors}
-\label{table:memory}
-\end{table}
+Aktuell werden alle verwendeten Variablen im globalen Speicher der GPU gehalten, was zu langsamen Zugriffszeiten führt. Ein weiterer Schritt wäre zu prüfen, in wie weit der verwendetet Speicher über Shared Memory gepuffert und somit die Zugriffszeiten beschleunigt werden können. Hierbei müssen jedoch noch mehrere Dinge bedacht werden. Angenommen es wird eine Feldgröße von $1000$ Bit verwendet und jeder Threads soll lediglich sein Ergebnis puffern. Bei einer maximalen Anzahl von 1024 Threads pro Block werden insgesamt $10240000$ Bits $=$ $1280000$ Bytes benötigt, was die Größe von $49152$ Bytes pro Block bei weitem übersteigt. Passt man die Anzahl der Threads pro Block an die Größe des benötigten Shared Memory pro Thread an, reduziert sich die Anzahl der Threads pro Block auf $49$. Dadurch erhöht sich wiederum die Anzahl der benötigten Blöcke, was eine globale Synchronisierung der Blöcke unvermeidlich macht. Es muss aus diesem Grund abgewogen werden, welche Daten gepuffert werden sollen und wie sich die entstehende Anzahl der Threads pro Block auf die globale Performance auswirkt.
 
 \subsection{Test des Cuda Algorithmus}
-Getestet wurde der Cuda Algorithmus über separate Python Skripte. Hierzu wurde die in der libtrevisan enthaltene Funktion gen\_irreps dahingehend erweitert, dass durch diese eine Datei mit einer Python Funktion erstellt wird, durch die in Python bei Übergabe der Größe des Erweiterungsfeldes das entsprechende irreduzible Polynom zurück gegeben wird. Diese wird anschließend in der Datei createParameterFiles.py importiert und durch die enthaltene gleichnamige Funktion zwei Parameterdateien\footnote{Eine für C und eine für Python} mit folgenden Parametern erstellt:
+Getestet wurde der Cuda Algorithmus mit Hilfe von Python. Hierzu wurde die in der \textit{libtrevisan} enthaltene Funktion \textit{gen\_irreps} so erweitert, dass Python-Code generiert werden kann, der für jede Erweiterungsfeldgröße das entsprechende irreduzible Polynom zurück gibt. Der generierte Python-Code wird durch das Skript \textit{createParameterFiles.py} importiert und anschließend zwei Dateien\footnote{eine für C und eine für Python} mit folgenden Parametern erstellt:
 
-\begin{enumerate}
+\begin{itemize}
 \item Koeffizienten
 \item Anzahl der Koeffizienten
 \item Größe des Erweiterungsfeldes
 \item Die Stelle $x$, an der das Polynom evaluiert werden soll
 \item Das irreduzible Polynom
 \item Die Maske des Erweiterungsfeldes
-\end{enumerate}
+\end{itemize}
 
-Als Parameter müssen der Funktion createParameterFiles die Größe des Erweiterungsfeldes, der Grad des Polynoms und die Ausgabedateien übergeben werden. Es ist somit möglich, Parameterdateien für beliebige Feldgrößen und Polynomgrade zu erstellen und den Cuda Algorithmus damit zu testen. 
-Verwendet wird die Parameterdatei zum einen in einer in C implementierte Testfunktion die den Cuda Algorithmus mit den in dieser Datei enthaltenen Parametern startet. Diese Testdatei muss anschließend mit der Parameterdatei in C und dem Cuda Code compiliert werden. Es muss bei der Compilierung das Define CUDA\_SANITY\_CHECKS aktiviert sein, was bei der Ausführung dazu führt, dass nach jedem Berechnungsschritt die Zwischenergebnisse in der Datei rsh\_test\_results gespeichert werden. Wenn der Algorithmus erfolgreich durchgelaufen ist wird die Python Funktion analyseTestResults ausgeführt und die Datei rsh\_test\_results als Parameter übergeben. Diese Funktion nutzt zudem die für Python erstellte Paramterdatei und führt auf Basis dieser eine Referenzimplementierung des Cuda Algorithmus in Python aus. Anschließend werden die Ergebnisse der Referenzimplementierung mit denen in der Datei rsh\_test\_results verglichen und alle Abweichungen ausgegeben.\newline
-Eine Referenzimplementierung in Python bot sich an da Python standardmäßig Unterstützung für große Zahlen bietet und man dadurch einfach die Algorithmen umsetzen konnte ohne auf Parallelisierung oder eine Aufspaltung der Variablen in einzelne Chunks achten zu müssen. Zudem ist Python nahezu immer auf UNIX basierten Betriebssystemen installiert und benötigt dadurch keine weitere Installationen von zusätzlichen Compilern oder Bibliotheken. Auch die Automatische Ausführung der Python Skripte gestaltete sich Problemlos, da diese ohne großen Aufwand in das vorhandene Makefile eingebaut werden konnten und somit auch die Reihenfolge der Aufrufe und die Compilierung des Testcodes in Abhängigkeit zu der erstellten Parameterdatei kontrolliert werden konnte.\newline
-Für kleine Parameter liefen die Tests erfolgreich durch. Bei steigender Parametergröße viel jedoch schnell auf, das der implementierte Cuda Code noch einige Synchronisierungsprobleme aufweist, da z.B. bei der Aufteilung der Threads auf mehrere Blöcke noch keine globale Synchronisierung vorhanden ist. Dies wurde allerdings aufgrund der fehlenden Optimierungen des Codes vernachlässigt, da dies evtl. dazu führen wird, das bei einigen Algorithmen größere Änderungen durchgeführt werden müssen und sich dadurch die notwendige Synchronisierung wieder ändern wird.
+Als Parameter müssen dem Skript \textit{createParameterFiles} die Größe des Erweiterungsfeldes, der Grad des Polynoms und die Ausgabedateien übergeben werden. Es ist somit möglich, Parameterdateien für beliebige Feldgrößen und Polynomgrade zu erstellen und den Cuda Algorithmus damit zu testen. 
+Verwendet werden die Parameter zum einen in einer in C implementierten Testfunktion \textit{test.cc}, die den Cuda-Algorithmus mit diesen startet. Die Testfunktion muss mit der generierten Parameterdatei in C und dem Cuda-Code kompiliert werden. Es muss bei der Kompilierung das Präprozessor Symbols \textit{CUDA\_SANITY\_CHECKS} aktiviert sein, damit nach jedem Berechnungsschritt die Zwischenergebnisse in der Datei \textit{rsh\_test\_results} abgespeichert werden. Wenn der Cuda-Algorithmus erfolgreich beendet wurde, wird die Python-Skript \textit{analyseTestResults.py} ausgeführt und die Ergebnisse des Tests \textit{rsh\_test\_results} übergeben. Dieses Skript nutzt die für Python erstellten Parameter und führt eine Referenzimplementierung des Cuda-Algorithmus in Python aus. Anschließend werden die Ergebnisse der Referenzimplementierung mit den Resultaten in \textit{rsh\_test\_results} verglichen und alle Abweichungen ausgegeben. Der Zusammenhang zwischen den einzelnen Testschritten ist in Abb. \ref{uml:cuda_test} dargestellt.\newline
+
+\begin{figure}
+\centering
+\input{Kapitel/Implementierung/cuda_test_seq_diag}
+\caption{Zusammenhang zwischen den am Test des Cuda-Codes beteiligten Dateien}
+\label{uml:cuda_test}
+\end{figure}
+
+Eine Referenzimplementierung in Python bot sich an, da Python standardmäßig Unterstützung für große Zahlen bietet und dadurch alle Algorithmen ohne Rücksicht auf Parallelisierung oder Aufspaltung der Variablen in einzelne Chunks umgesetzt werden konnten. Zudem ist Python nahezu immer auf UNIX basierten Betriebssystemen vorhanden und benötigt keine weitere Installationen zusätzlicher Compiler oder Bibliotheken. Auch die automatische Ausführung der Python Skripte gestaltete sich problemlos, da diese ohne großen Aufwand in das vorhandene Makefile eingebaut werden konnten und somit die Reihenfolge der Aufrufe und die Kompilierung des Testcodes in Abhängigkeit zur erstellten Parameterdatei kontrolliert werden konnte.\newline
+
+Für kleine Parameter waren die Tests erfolgreich. Bei steigender Parametergröße wurde deutlich, dass der implementierte Cuda-Code noch einige Synchronisierungsprobleme aufweist, da zum Beispiel bei der Aufteilung der Threads auf mehrere Blöcke noch keine globale Synchronisierung vorhanden ist.

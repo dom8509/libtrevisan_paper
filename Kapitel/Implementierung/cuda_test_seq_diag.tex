@@ -1,0 +1,23 @@
+\pgfumlsdunderlinefalse
+\begin{sequencediagram}
+  \newthread{a}{Makefile}
+  \newinst[1]{b}{gen\_irreps}
+  \newinst[0.5]{c}{createParameterFiles.py}
+  \newinst[0.5]{d}{test.cc}
+  \newinst[0.5]{e}{analyseTestResults.py}
+
+  \begin{call}{a}{}{b}{irreps\_cuda.py}
+  \end{call}
+
+  \begin{call}{a}{}{c}{rsh\_test\_parameters.cc/.py}
+  \end{call}
+
+  \begin{call}{a}{kompiliere Test-Code}{a}{}
+  \end{call}
+
+  \begin{call}{a}{}{d}{rsh\_test\_results}
+  \end{call}
+
+  \begin{call}{a}{}{e}{Testbericht}
+  \end{call}  
+\end{sequencediagram}
