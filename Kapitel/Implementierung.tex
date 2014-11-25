@@ -1,10 +1,10 @@
 \section{Implementierung}
 
-Da keine der gefundenen Bibliotheken alle Anforderungen erfüllt, musste eine eigene Implementierung entwickelt werden, die alle ben"otigten mathematischen Berechnungen durchführen kann.
+Da keine der gefundenen Bibliotheken alle Anforderungen erfüllt und es sehr aufw"andig w"are, eine existierende Implementierung zu erweitern, wurde eine eigene Implementierung entwickelt, die alle ben"otigten mathematischen Berechnungen durchführen kann.
 
 \subsection{Parallele Polynevaluierung}
-Der Standardalgorithmus für die Polynomevaluierung auf CPUs ist das \textit{Horner-Schema}, da dies die minimale Anzahl an Additionen und Multiplikationen benötigt\cite{Ostrowski:1954}\cite{Pan:1966}. Leider ist beim Horner-Schema jeder Berechnungsschritt abhängig vom Zwischenergebnis des letztes Schrittes, was einer Parallelisierung des Algorithmus im Wege steht.\newline
-Ein weiteres Verwahren zur Polynomevaluierung ist das \textit{Estrin-Schema}\cite{EstrinsScheme}. Das Estrin-Schema versucht die schlechte Parallelisierbarkeit des Horner-Schemas zu eliminieren, indem das zu evaluierende Polynom so in Teilausdrücke aufgeteilt wird, dass einzelne Teile der Formel parallel abgearbeitet werden. Dieses Verfahren kommt zwar im Gegensatz zum Horner-Schema mehr mit der minimalen Anzahl von Additionen und Multiplikationen aus, dies wird zu Gunsten der besseren Parallelisierbarkeit allerdings akzeptiert.\newline
+Der Standardalgorithmus für die Polynomevaluierung auf CPUs ist das \textit{Horner-Schema}, da dies die minimale Anzahl an Additionen und Multiplikationen benötigt\cite{Ostrowski:1954}\cite{Pan:1966}. Leider ist beim Horner-Schema jeder Berechnungsschritt abh"angig vom Zwischenergebnis des letztes Schrittes, was einer Parallelisierung des Algorithmus im Wege steht.\newline
+Ein weiteres Verwahren zur Polynomevaluierung ist das \textit{Estrin-Schema}\cite{EstrinsScheme}. Das Estrin-Schema versucht die schlechte Parallelisierbarkeit des Horner-Schemas zu eliminieren, indem das zu evaluierende Polynom so in Teilausdr"ucke aufgeteilt wird, dass einzelne Teile der Formel parallel abgearbeitet werden. Dieses Verfahren kommt zwar im Gegensatz zum Horner-Schema mehr mit der minimalen Anzahl von Additionen und Multiplikationen aus, dies wird zu Gunsten der besseren Parallelisierbarkeit allerdings akzeptiert.\newline
 Formel \eqref{estrin} zeigt, wie beispielsweise ein Polynom vom Grad 4 mit Hilfe des Estrin-Schemas aufgelöst werden kann.
 \begin{equation}\label{estrin}
 P(x) = a_4x^4 + a_3x^3 + a_2x^2 + a_1x + a_0 = a_4x^4 + (a_2+a_3x)x^2 + (a_0+a_1x)
@@ -125,7 +125,7 @@ Insgesamt bedeutet dies, dass eine Beschleunigung des RSH Extraktors durch die A
 \subsection{Ausblick und Optimierung des Cuda Algorithmus}
 Der wichtigste Schritt eine Beschleunigung des Cuda Algorithmus zu erreichen, ist einen Cuda Algorithmus für die Multiplikation zweier großer Zahlen über Erweiterungsfeldern zu finden, der eine Laufzeit $<O(l)$ besitzt. Einige Algorithmen hierzu sind in Tabelle \ref{table:bnmult} aufgeführt. Als Referenz wurde die zusätzlich die Laufzeit Schulbuchmethode angegeben, wobei sich die Laufzeit der Implementierung von dieser unterscheidet, da im verwendeten Binärsystem jede Multiplikation lediglich eine Entscheidung darüber ist, ob der Multiplikant im aktuellen Iterationsschritt verwendet wird oder nicht.
 
-\begin{table}
+\begin{table}[b]
 \centering
 \begin{tabular}{ll}
 \toprule

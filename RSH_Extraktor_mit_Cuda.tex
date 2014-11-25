@@ -13,7 +13,8 @@
 % Pakete um Latin1 Zeichnensätze verwenden zu können und die dazu
 % passenden Schriften.
 %
-\usepackage[utf8]{inputenc}
+%\usepackage[utf8]{inputenc}
+\usepackage[utf8]{luainputenc}
 %\usepackage[T1]{fontenc}
 
 %
@@ -159,7 +160,7 @@
     box plot median/.style={
         /pgfplots/box plot,
         /pgfplots/.cd,
-        mark size=.4em,
+        mark size=.6em,
         thick
     }
 }
@@ -261,6 +262,8 @@
 \title{GPU-Implementierung des RSH-Extraktors}
 \author{Dominik Stamm, Markus Dollinger}
 \maketitle
+
+\vspace{1cm}
 
 \input{Kapitel/RSH-Extraktor}
 \input{Kapitel/Anforderungen}

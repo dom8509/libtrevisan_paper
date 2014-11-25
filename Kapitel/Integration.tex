@@ -1,7 +1,16 @@
 \section{Integration in libtrevisan}
 \label{sec:integration}
 
-\begin{figure}
+
+Libtrevisan ist ein in C++ implementiertes Framework, dessen Sourcecode auf GitHub\footnote{https://github.com/wolfgangmauerer/libtrevisan} verf"ugbar ist. Der Name leitet sich aus dem Ziel des Projektes ab, eine Implementierung anzubieten, die Trevisans Extraktor-Konstruktion umsetzt und leicht in eigene Projekte zu integrieren ist. Die Software wurde als Produktliniensoftware umgesetzt und ist "uber das \emph{makefile} parametrisierbar. Die Verwendung von NTL\footnote{http://www.shoup.net/ntl/} oder \emph{SSE4} kann je nach vorhandener Hard-/Software konfiguriert werden. Durch Verwendung einer Weakdesign- und einer Bitextraktor-Oberklasse, von denen konkrete Implementierungen erben, ergibt sich ein modularer Aufbau, der leicht um eigene Implementierungen erweitert werden kann.
+
+Eine zus"atzliche Extraktorklasse "ubernimmt den Aufruf des GPU-Algorithmus. Um die GPU-Imple\-mentierung in libtrevisan zu integrieren, musste die Bibliothek an einigen Stellen angepasst werden. Die Struktur ist rein auf eine Ausf"uhrung auf der CPU ausgelegt; um mehrere CPU Kerne zu benutzen, werden mehrere Threads gestartet, die jeweils ein Bit extrahieren. Die Implementation der GPU-Variante parallelisiert jedoch die einzelne Extraktion und (noch) nicht den kompletten Vorgang. Deshalb wird, wenn erkannt wird, dass die GPU benutzt werden soll, die Anzahl der CPU Threads auf 1 begrenzt. Dar"uberhinaus ist ein h"aufiger Kontextwechsel von CPU zu GPU und umgekehrt von Nachteil, was jedoch ohne "Anderung an libtrevisan unumg"anglich w"are, da bei jedem Extraktionsschritt lokale Daten berechnet werden, die in den Speicher der GPU "ubertragen werden und, wenn ein Bit extrahiert wurde, auch r"uck"ubertragen werden. Um diesen Flaschenhals zu umgehen, werden alle im Laufe der Extraktionen ben"otigten Werte vorausberechnet, in den Speicher der GPU geschrieben und, wenn alle Bits extrahiert wurden, gesammelt zur"uck in den Hauptspeicher geschrieben. Um dies zu erm"oglichen musste die Extraktorklasse um zwei Methoden erweitert werden, wodurch der Extraktoraufruf ebenfalls angepasst werden musste, da diese Methoden nicht in der Oberklasse vorhanden sind und im normalen Extraktionsprozess nicht vorkommen. Die letzten beiden Mehtoden in Listing \ref{lst:codevorschlag} zeigen die vorgeschlagene Ver"anderung an der \texttt{bitext}-Klasse. Listing \ref{lst:codevorschlag2} skizziert den vorgeschlagenen ge"anderten Ablauf im Extraktionsprozess.
+
+Ein zus"atzlicher Parameter im \emph{makefile} bestimmt beim "Ubersetzen von libtrevisan, ob die CUDA-Variante des RSH-Extraktors mit "ubersetzt wird oder nicht.
+
+\begin{minipage}{\textwidth}
+\vspace{1cm}
+
 \begin{lstlisting}[language=C++,captionpos=b,backgroundcolor=\color{gray!20}, caption=\"Anderungsvorschlag f"ur die Klasste \texttt{bitext}, label=lst:codevorschlag]
 class bitext {
 public:
@@ -31,13 +40,12 @@ public:
 	
 	// prepare data before extraction process 
 	void preExtract();
-	// followUp after the extractoin process
+	// follow up after the extractoin process
 	void postExtract();
 
 };
 \end{lstlisting}
-\end{figure}
-\begin{figure}
+\vspace{.5cm}
 \begin{lstlisting}[language=C++,captionpos=b,backgroundcolor=\color{gray!20}, caption=\"Anderungsvorschlag f"ur Extraktionsprozess, label=lst:codevorschlag2]
 // prepare extraction process
 bext->preExtract();
@@ -45,13 +53,8 @@ bext->preExtract();
 // extract all bits, parallelism is used inside the bitext implementation
 bext->extract();
 	
-// followUp extraction process
+// follow up extraction process
 bext->postExtract();
 \end{lstlisting}
-\end{figure}
 
-Libtrevisan ist ein in C++ implementiertes Framework, dessen Sourcecode auf GitHub\footnote{https://github.com/wolfgangmauerer/libtrevisan} verf"ugbar ist. Der Name leitet sich aus dem Ziel des Projektes ab, eine Implementierung anzubieten, die Trevisans Extraktor-Konstruktion umsetzt und leicht in eigene Projekte zu integrieren ist. Die Software wurde als Produktliniensoftware umgesetzt und ist "uber das \emph{makefile} parametrisierbar. Die Verwendung von NTL\footnote{http://www.shoup.net/ntl/} oder \emph{SSE4} kann je nach vorhandener Hard-/Software konfiguriert werden. Durch Verwendung einer Weakdesign- und einer Bitextraktor-Oberklasse, von denen konkrete Implementierungen erben, ergibt sich ein modularer Aufbau, der leicht um eigene Implementierungen erweitert werden kann.
-
-Eine zus"atzliche Extraktorklasse "ubernimmt den Aufruf des GPU-Algorithmus. Um die GPU-Implementierung in libtrevisan zu integrieren, musste die Bibliothek an einigen Stellen angepasst werden. Die Struktur ist rein auf eine Ausf"uhrung auf der CPU ausgelegt; um mehrere CPU Kerne zu benutzen, werden mehrere Threads gestartet, die jeweils ein Bit extrahieren. Die Implementation der GPU-Variante parallelisiert jedoch die einzelne Extraktion und (noch) nicht den kompletten Vorgang. Deshalb wird, wenn erkannt wird, dass die GPU benutzt werden soll, die Anzahl der CPU Threads auf 1 begrenzt. Dar"uberhinaus ist ein h"aufiger Kontextwechsel von CPU zu GPU und umgekehrt von Nachteil, was jedoch ohne "Anderung an libtrevisan unumg"anglich w"are, da bei jedem Extraktionsschritt lokale Daten berechnet werden, die in den Speicher der GPU "ubertragen werden und, wenn ein Bit extrahiert wurde, auch r"uck"ubertragen werden. Um diesen Flaschenhals zu umgehen, werden alle im Laufe der Extraktionen ben"otigten Werte vorausberechnet, in den Speicher der GPU geschrieben und, wenn alle Bits extrahiert wurden, gesammelt zur"uck in den Hauptspeicher geschrieben. Um dies zu erm"oglichen musste die Extraktorklasse um zwei Methoden erweitert werden, wodurch der Extraktoraufruf ebenfalls angepasst werden musste, da diese Methoden nicht in der Oberklasse vorhanden sind und im normalen Extraktionsprozess nicht vorkommen. Die letzten beiden Mehtoden in Listing \ref{lst:codevorschlag} zeigen die vorgeschlagene Ver"anderung an der \texttt{bitext}-Klasse. Listing \ref{lst:codevorschlag2} skizziert den vorgeschlagenen ge"anderten Ablauf im Extraktionsprozess.
-
-Ein zus"atzlicher Parameter im \emph{makefile} bestimmt beim "Ubersetzen von libtrevisan, ob die CUDA-Variante des RSH-Extraktors mit "ubersetzt wird oder nicht.
+\end{minipage}

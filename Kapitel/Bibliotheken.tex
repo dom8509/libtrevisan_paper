@@ -1,7 +1,7 @@
 \section{Getestete Bibliotheken}
 \label{Bibliotheken}
 
-Der RSH-Extraktor hat mathematische Anforderungen, die "uber die F"ahigkeiten der in Hardware verf"ugbaren Arithmetik hinausgehen. Um den Extraktor auf einen Grafikprozessor portieren zu können, m"ussen folgende Operationen unterst"utzt werden:
+Der RSH-Extraktor hat mathematische Anforderungen, die "uber die F"ahigkeiten der in Hardware verf"ugbaren Arithmetik hinausgehen. Um den Extraktor auf einen Grafikprozessor portieren zu k"onnen, m"ussen folgende Operationen unterst"utzt werden:
 \begin{itemize}
 	\item Multiplizieren und Evaluieren von Polynomen "uber $GF(2^n)$
 	\item Rechnen mit sehr gro"sen Zahlen, da Koeffizienten mit mehr als 1000 Bit entstehen k"onnen
@@ -26,20 +26,18 @@ GARPEC steht ebenfalls unter der GPL.
 \subsection{GPUMP}
 Die GPUMP Bibliothek implementiert Ganzzahlarithmetik mit beliebiger Genauigkeit. Der Fokus liegt bei der Verwendung in Public Key Kryptographie (PKK) Verfahren. Durch das Fehlen der Arithmetik "uber die ben"otigten Erweiterungsfelder sowie die M"oglichkeit zur Polynomevaluierung ist auch diese Bibliothek nicht geeignet. Der Quellcode der Bibliothek wird nicht als Download angeboten, sondern war nur auf Anfrage zu erhalten. Dar"uber hinaus f"uhrt die Absenz einer Lizenz zu einer rechtlich unklaren Situation.
 
-
 \begin{table}
-	\centering
-	\begin{tabular}{lccc}
-		\hline \hline
+\centering
+\begin{tabular}{lccc}
+\toprule
 		Bibliothek & gro"se Zahlen & $GF(2^n)$-Arithmetik & Polynomevaluierung \\
-		\hline
-		\vspace{-3mm}\\
+\midrule
 		CUMODP	& \xmark & \xmark & \cmark \\
 		CUMP	& \cmark & \xmark & \xmark \\
 		GARPREC	& \cmark & \xmark & \xmark \\
 		GPUMP	& \cmark & \xmark & \xmark \\
-		\hline
-	\end{tabular}
+\bottomrule
+\end{tabular}
 	\caption{Gegen"uberstellung der Bibliotheken}
 	\label{table:vergleichBibliotheken}
 \end{table}
